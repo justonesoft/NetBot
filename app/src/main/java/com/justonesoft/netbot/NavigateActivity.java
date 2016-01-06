@@ -175,7 +175,8 @@ public class NavigateActivity extends ActionBarActivity implements View.OnTouchL
                 BTController.getInstance().sendCommand(command);
                 handler.obtainMessage(command).sendToTarget();
                 try {
-                    Thread.sleep(300);
+                    // Just a short pause in case the button is kept pressed. Worth trying without this pause at all.
+                    Thread.sleep(10);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
