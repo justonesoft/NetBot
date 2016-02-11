@@ -15,6 +15,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.justonesoft.netbot.bt.BTController;
+import com.justonesoft.netbot.util.Commands;
 import com.justonesoft.netbot.util.TextViewUtil;
 
 import java.util.Set;
@@ -23,13 +24,7 @@ import java.util.Set;
 public class NavigateActivity extends ActionBarActivity implements View.OnTouchListener {
 
     private BluetoothDevice bluetoothDevice;
-    private CommandSender commandSender;
     private Handler handler;
-
-    private static final byte UP = 1;
-    private static final byte DOWN = 2;
-    private static final byte LEFT = 3;
-    private static final byte RIGHT = 4;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -122,65 +117,32 @@ public class NavigateActivity extends ActionBarActivity implements View.OnTouchL
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 // start sending commands
-                if (commandSender != null) {
-                    TextViewUtil.prefixWithText(statusText, getText(R.string.err_already_sending_command), true);
-                    return false;
-                }
-                byte command = 0;
+                byte commandToSend = 0;
                 switch (v.getId()) {
                     case R.id.up_button:
-                        command = UP;
+                        commandToSend = Commands.MOVE_FORWARD.getWhatToSend();
                         break;
                     case R.id.down_button:
-                        command = DOWN;
+                        commandToSend = Commands.MOVE_BACKWARDS.getWhatToSend();
                         break;
                     case R.id.left_button:
-                        command = LEFT;
+                        commandToSend = Commands.TURN_LEFT.getWhatToSend();
                         break;
                     case R.id.right_button:
-                        command = RIGHT;
+                        commandToSend = Commands.TURN_RIGHT.getWhatToSend();
                         break;
                 }
-                if (command != 0) {
-                    commandSender = new CommandSender(command);
-                    commandSender.start();
-                }
+                BTController.getInstance().sendCommand(commandToSend);
+                handler.obtainMessage(commandToSend).sendToTarget();
+
                 break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_OUTSIDE:
-                if (commandSender != null) {
-                    commandSender.stopSendingCommand();
-                    commandSender = null;
-                }
+                commandToSend = Commands.STOP.getWhatToSend();
+                BTController.getInstance().sendCommand(commandToSend);
+                handler.obtainMessage(commandToSend).sendToTarget();
                 break;
         }
         return false;
-    }
-
-    class CommandSender extends Thread {
-        private byte command;
-        private boolean stop = false;
-
-        public CommandSender(byte command) {
-            this.command = command;
-        }
-
-        public void stopSendingCommand() {
-            stop = true;
-        }
-
-        @Override
-        public void run() {
-            while (!stop) {
-                BTController.getInstance().sendCommand(command);
-                //handler.obtainMessage(command).sendToTarget();
-                // try {
-                    // Just a short pause in case the button is kept pressed. Worth trying without this pause at all.
-                    // Thread.sleep(100);
-                // } catch (InterruptedException e) {
-                //    e.printStackTrace();
-                // }
-            }
-        }
     }
 }
