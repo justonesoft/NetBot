@@ -9,16 +9,12 @@ import android.os.Message;
 import android.widget.TextView;
 
 import com.justonesoft.netbot.R;
+import com.justonesoft.netbot.communication.BluetoothCommunicator;
 import com.justonesoft.netbot.util.TextViewUtil;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.security.PublicKey;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Created by bmunteanu on 4/22/2015.
@@ -247,50 +243,4 @@ public class BTController {
         }
     }
 
-    class BluetoothCommunicator extends Thread {
-        // this element is used to receive data from a producer. The data will be read and sent over bluetooth.
-        // it is a blocking queue, meaning that it will block until something is ready to be sent over BT
-        private BlockingQueue<Byte> commandsToSendQueue = new LinkedBlockingQueue<>(100);
-
-        private InputStream btInputStream;
-        private OutputStream btOutputStream;
-
-        public BluetoothCommunicator (InputStream btInputStream, OutputStream btOutputStream) {
-            this.btInputStream = btInputStream;
-            this.btOutputStream = btOutputStream;
-        }
-
-        public void write(Byte command) {
-            try {
-                commandsToSendQueue.put(command);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
-        public Byte read() {
-            // there should be 2 threads: a reader and a writer
-            // the reader will pass what it reads to a more specialized unit that actually knows what to do with the data.
-            // this specialized unit is also a thread blocking on quea.
-            // For example if it is a response to a command or just a plain message.
-            return null;
-        }
-
-        @Override
-        public void run() {
-            while (true) {
-                try {
-                    // read from queue, blocks if noting is to be read
-                    Byte command = commandsToSendQueue.take();
-
-                    // write to bluetooth
-                    btOutputStream.write(command);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
 }
