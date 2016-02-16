@@ -46,11 +46,11 @@ public class BTController {
     private BTController() {
         btAdapter = BluetoothAdapter.getDefaultAdapter();
 
-        // instantitate the handler to use the main thread by passing the mail looper
+        // instantiate the handler to use the main thread by passing the main looper
         handler = new Handler(Looper.getMainLooper()) {
             @Override
             public void handleMessage(Message msg) {
-                // this method will actually run on the main UI thread. This is because we have used the mailLooper to instatiate this Handler.
+                // this method will actually run on the main UI thread. This is because we have used the mailLooper to instantiate this Handler.
                 TextView statusTextView = (TextView) msg.obj;
 
                 if (statusTextView != null) {
@@ -103,6 +103,11 @@ public class BTController {
         return btAdapter.isEnabled();
     }
 
+    /**
+     * Return the list of all paired devices for this device.
+     *
+     * @return Set&lt;BluetoothDevice&gt;
+     */
     public Set<BluetoothDevice> getPairedDevices() {
         if (!isEnabled()) {
             return null; // or throw exception??
@@ -187,6 +192,7 @@ public class BTController {
                 // send a message to handler to update the UI with a message
                 handler.obtainMessage(BT_STATUS_CONNECTED, statusText).sendToTarget();
 
+                // we are now connected
                 startCommunication(statusText);
             } catch (IOException connectException) {
                 // Unable to connect; close the socket and get out
@@ -223,6 +229,7 @@ public class BTController {
     private void startCommunication(TextView statusText) {
         if (isConnected()) {
             if (communicator == null) {
+                // initialize a communicator
                 BluetoothCommunicator tmpCommunicator = null;
                 try {
                     tmpCommunicator = new BluetoothCommunicator(btSocket.getInputStream(), btSocket.getOutputStream());
@@ -262,6 +269,10 @@ public class BTController {
         }
 
         public Byte read() {
+            // there should be 2 threads: a reader and a writer
+            // the reader will pass what it reads to a more specialized unit that actually knows what to do with the data.
+            // this specialized unit is also a thread blocking on quea.
+            // For example if it is a response to a command or just a plain message.
             return null;
         }
 

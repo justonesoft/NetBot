@@ -20,7 +20,10 @@ import com.justonesoft.netbot.util.TextViewUtil;
 
 import java.util.Set;
 
-
+/**
+ * This class is where user can send commands to the controlled bot over Bluetooth. <br />
+ * Here also happens the actual Bluetooth connection with the controlled bot.
+ */
 public class NavigateActivity extends ActionBarActivity implements View.OnTouchListener {
 
     private BluetoothDevice bluetoothDevice;
@@ -34,7 +37,7 @@ public class NavigateActivity extends ActionBarActivity implements View.OnTouchL
         Intent intent = getIntent();
 
         if (intent != null) {
-            // get the device address
+            // get the device address; this has been put here by the MainActivity activity
             String deviceAddress = intent.getStringExtra(MainActivity.BT_DEVICE_MAC);
 
             // look for the actual BluetoothDevice
@@ -76,6 +79,7 @@ public class NavigateActivity extends ActionBarActivity implements View.OnTouchL
         if (this.bluetoothDevice == null) {
             TextViewUtil.prefixWithText(statusText, getText(R.string.err_inval_bt_device), true);
         } else {
+            // perform the Bluetooth connection with the bot
             TextViewUtil.prefixWithText(statusText, getText(R.string.connecting_to_device) + this.bluetoothDevice.getName(), true);
             BTController.getInstance().connectWithBTDevice(this.bluetoothDevice, statusText);
         }
@@ -110,14 +114,25 @@ public class NavigateActivity extends ActionBarActivity implements View.OnTouchL
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * When used presses anywhere on the screen this method will be called.
+     * Here it is checked the "press" action that can be" down or up or something else. I'm only interested in the "down" and "up" events.
+     * After the event has been identified, I check to see on which component the event happened: a button or somewhere else.
+     *
+     * @param v The component on which the event happened, like a Button.
+     * @param event The actual event, like "down" or "up" when a finger touches or releases the screen.
+     * @return
+     */
     @Override
     public boolean onTouch(View v, MotionEvent event) {
         TextView statusText = (TextView) findViewById(R.id.nav_status_text);
 
         switch (event.getAction()) {
+            // identify the event
             case MotionEvent.ACTION_DOWN:
                 // start sending commands
                 byte commandToSend = Commands.STOP.getWhatToSend();
+                // identify the component
                 switch (v.getId()) {
                     case R.id.up_button:
                         commandToSend = Commands.MOVE_FORWARD.getWhatToSend();
