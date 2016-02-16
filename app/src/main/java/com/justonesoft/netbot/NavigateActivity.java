@@ -117,7 +117,7 @@ public class NavigateActivity extends ActionBarActivity implements View.OnTouchL
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 // start sending commands
-                byte commandToSend = 0;
+                byte commandToSend = Commands.STOP.getWhatToSend();
                 switch (v.getId()) {
                     case R.id.up_button:
                         commandToSend = Commands.MOVE_FORWARD.getWhatToSend();
