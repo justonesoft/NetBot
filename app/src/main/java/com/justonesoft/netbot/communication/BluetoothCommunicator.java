@@ -1,8 +1,11 @@
 package com.justonesoft.netbot.communication;
 
+import com.justonesoft.netbot.processor.CommunicationProcessor;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -20,24 +23,24 @@ public class BluetoothCommunicator extends Thread {
     private final OutputStreamWriterThread writerThread;
     private final InputStreamReaderThread readerThread;
 
+    private final CommunicationProcessor communicationProcessor;
+
     public BluetoothCommunicator(InputStream btInputStream, OutputStream btOutputStream) {
         this.btInputStream = btInputStream;
         this.btOutputStream = btOutputStream;
 
         writerThread = new OutputStreamWriterThread(btOutputStream);
-        readerThread = new InputStreamReaderThread();
+        readerThread = new InputStreamReaderThread(btInputStream, this);
+
+        communicationProcessor = new CommunicationProcessor();
     }
 
     public void write(Byte command) {
         writerThread.write(command);
     }
 
-    public Byte read() {
-        // there should be 2 threads: a reader and a writer
-        // the reader will pass what it reads to a more specialized unit that actually knows what to do with the data.
-        // this specialized unit is also a thread blocking on quea.
-        // For example if it is a response to a command or just a plain message.
-        return null;
+    public void process(byte[] data, int dataSize) {
+        communicationProcessor.process(Arrays.copyOf(data, dataSize));
     }
 
     @Override

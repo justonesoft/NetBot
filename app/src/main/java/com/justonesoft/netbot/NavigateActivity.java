@@ -16,6 +16,9 @@ import android.widget.TextView;
 
 import com.justonesoft.netbot.bt.BTController;
 import com.justonesoft.netbot.util.Commands;
+import com.justonesoft.netbot.util.StatusTextUpdater;
+import com.justonesoft.netbot.util.StatusTextUpdaterManager;
+import com.justonesoft.netbot.util.StatusUpdateType;
 import com.justonesoft.netbot.util.TextViewUtil;
 
 import java.util.Set;
@@ -24,10 +27,29 @@ import java.util.Set;
  * This class is where user can send commands to the controlled bot over Bluetooth. <br />
  * Here also happens the actual Bluetooth connection with the controlled bot.
  */
-public class NavigateActivity extends ActionBarActivity implements View.OnTouchListener {
+public class NavigateActivity extends ActionBarActivity implements View.OnTouchListener, StatusTextUpdater {
+
+    public final static int COMMAND_SENT_ID = 100;
+    public final static int TEXT = 101;
+    public final static int TEXT_UPDATER_ID = 1;
 
     private BluetoothDevice bluetoothDevice;
     private Handler handler;
+
+    @Override
+    public void updateStatusText(int statusType, Object payload) {
+        this.handler.obtainMessage(statusType, payload).sendToTarget();
+    }
+
+    @Override
+    public void updateStatusText(int statusType) {
+        this.handler.obtainMessage(statusType).sendToTarget();
+    }
+
+    @Override
+    public void updateStatusText(String statusText) {
+        this.handler.obtainMessage(TEXT, statusText).sendToTarget();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,10 +78,28 @@ public class NavigateActivity extends ActionBarActivity implements View.OnTouchL
         handler = new Handler(getMainLooper()) {
             @Override
             public void handleMessage(Message msg) {
-                TextView statusText = (TextView) findViewById(R.id.nav_status_text);
-                TextViewUtil.prefixWithText(statusText, String.valueOf(msg.what), false);
+                TextView statusTextView = (TextView) findViewById(R.id.nav_status_text);
+
+                if (statusTextView != null) {
+                    // update the UI based on the status
+                    switch (msg.what) {
+                        case BTController.BT_STATUS:
+                            TextViewUtil.prefixWithText(statusTextView, getText(((StatusUpdateType)msg.obj).getUiResourceId()), true);
+                            break;
+                        case COMMAND_SENT_ID:
+                            TextViewUtil.prefixWithText(statusTextView, msg.obj.toString(), false);
+                            break;
+                        case TEXT:
+                            TextViewUtil.prefixWithText(statusTextView, msg.obj.toString(), true);
+                            break;
+                        default:
+                            TextViewUtil.prefixWithText(statusTextView, msg.obj.toString(), true);
+                    }
+                }
             }
         };
+
+        StatusTextUpdaterManager.registerTextUpdater(TEXT_UPDATER_ID, this);
     }
 
     private void addTouchClickEventsToButtons() {
@@ -81,7 +121,7 @@ public class NavigateActivity extends ActionBarActivity implements View.OnTouchL
         } else {
             // perform the Bluetooth connection with the bot
             TextViewUtil.prefixWithText(statusText, getText(R.string.connecting_to_device) + this.bluetoothDevice.getName(), true);
-            BTController.getInstance().connectWithBTDevice(this.bluetoothDevice, statusText);
+            BTController.getInstance().connectWithBTDevice(this.bluetoothDevice);
         }
 
     }
@@ -148,14 +188,14 @@ public class NavigateActivity extends ActionBarActivity implements View.OnTouchL
                         break;
                 }
                 BTController.getInstance().sendCommand(commandToSend);
-                handler.obtainMessage(commandToSend).sendToTarget();
+                updateStatusText(COMMAND_SENT_ID, Integer.valueOf(commandToSend));
 
                 break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_OUTSIDE:
                 commandToSend = Commands.STOP.getWhatToSend();
                 BTController.getInstance().sendCommand(commandToSend);
-                handler.obtainMessage(commandToSend).sendToTarget();
+                updateStatusText(COMMAND_SENT_ID, Integer.valueOf(commandToSend));
                 break;
         }
         return false;
