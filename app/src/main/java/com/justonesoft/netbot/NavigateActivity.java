@@ -15,21 +15,41 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.justonesoft.netbot.bt.BTController;
+import com.justonesoft.netbot.util.Commands;
+import com.justonesoft.netbot.util.StatusTextUpdater;
+import com.justonesoft.netbot.util.StatusTextUpdaterManager;
+import com.justonesoft.netbot.util.StatusUpdateType;
 import com.justonesoft.netbot.util.TextViewUtil;
 
 import java.util.Set;
 
+/**
+ * This class is where user can send commands to the controlled bot over Bluetooth. <br />
+ * Here also happens the actual Bluetooth connection with the controlled bot.
+ */
+public class NavigateActivity extends ActionBarActivity implements View.OnTouchListener, StatusTextUpdater {
 
-public class NavigateActivity extends ActionBarActivity implements View.OnTouchListener {
+    public final static int COMMAND_SENT_ID = 100;
+    public final static int TEXT = 101;
+    public final static int TEXT_UPDATER_ID = 1;
 
     private BluetoothDevice bluetoothDevice;
-    private CommandSender commandSender;
     private Handler handler;
 
-    private static final byte UP = 1;
-    private static final byte DOWN = 2;
-    private static final byte LEFT = 3;
-    private static final byte RIGHT = 4;
+    @Override
+    public void updateStatusText(int statusType, Object payload) {
+        this.handler.obtainMessage(statusType, payload).sendToTarget();
+    }
+
+    @Override
+    public void updateStatusText(int statusType) {
+        this.handler.obtainMessage(statusType).sendToTarget();
+    }
+
+    @Override
+    public void updateStatusText(String statusText) {
+        this.handler.obtainMessage(TEXT, statusText).sendToTarget();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,7 +59,7 @@ public class NavigateActivity extends ActionBarActivity implements View.OnTouchL
         Intent intent = getIntent();
 
         if (intent != null) {
-            // get the device address
+            // get the device address; this has been put here by the MainActivity activity
             String deviceAddress = intent.getStringExtra(MainActivity.BT_DEVICE_MAC);
 
             // look for the actual BluetoothDevice
@@ -58,10 +78,28 @@ public class NavigateActivity extends ActionBarActivity implements View.OnTouchL
         handler = new Handler(getMainLooper()) {
             @Override
             public void handleMessage(Message msg) {
-                TextView statusText = (TextView) findViewById(R.id.nav_status_text);
-                TextViewUtil.prefixWithText(statusText, String.valueOf(msg.what), false);
+                TextView statusTextView = (TextView) findViewById(R.id.nav_status_text);
+
+                if (statusTextView != null) {
+                    // update the UI based on the status
+                    switch (msg.what) {
+                        case BTController.BT_STATUS:
+                            TextViewUtil.prefixWithText(statusTextView, getText(((StatusUpdateType)msg.obj).getUiResourceId()), true);
+                            break;
+                        case COMMAND_SENT_ID:
+                            TextViewUtil.prefixWithText(statusTextView, msg.obj.toString(), false);
+                            break;
+                        case TEXT:
+                            TextViewUtil.prefixWithText(statusTextView, msg.obj.toString(), true);
+                            break;
+                        default:
+                            TextViewUtil.prefixWithText(statusTextView, msg.obj.toString(), true);
+                    }
+                }
             }
         };
+
+        StatusTextUpdaterManager.registerTextUpdater(TEXT_UPDATER_ID, this);
     }
 
     private void addTouchClickEventsToButtons() {
@@ -81,8 +119,9 @@ public class NavigateActivity extends ActionBarActivity implements View.OnTouchL
         if (this.bluetoothDevice == null) {
             TextViewUtil.prefixWithText(statusText, getText(R.string.err_inval_bt_device), true);
         } else {
+            // perform the Bluetooth connection with the bot
             TextViewUtil.prefixWithText(statusText, getText(R.string.connecting_to_device) + this.bluetoothDevice.getName(), true);
-            BTController.getInstance().connectWithBTDevice(this.bluetoothDevice, statusText);
+            BTController.getInstance().connectWithBTDevice(this.bluetoothDevice);
         }
 
     }
@@ -115,72 +154,50 @@ public class NavigateActivity extends ActionBarActivity implements View.OnTouchL
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * When used presses anywhere on the screen this method will be called.
+     * Here it is checked the "press" action that can be" down or up or something else. I'm only interested in the "down" and "up" events.
+     * After the event has been identified, I check to see on which component the event happened: a button or somewhere else.
+     *
+     * @param v The component on which the event happened, like a Button.
+     * @param event The actual event, like "down" or "up" when a finger touches or releases the screen.
+     * @return
+     */
     @Override
     public boolean onTouch(View v, MotionEvent event) {
         TextView statusText = (TextView) findViewById(R.id.nav_status_text);
 
         switch (event.getAction()) {
+            // identify the event
             case MotionEvent.ACTION_DOWN:
                 // start sending commands
-                if (commandSender != null) {
-                    TextViewUtil.prefixWithText(statusText, getText(R.string.err_already_sending_command), true);
-                    return false;
-                }
-                byte command = 0;
+                byte commandToSend = Commands.STOP.getWhatToSend();
+                // identify the component
                 switch (v.getId()) {
                     case R.id.up_button:
-                        command = UP;
+                        commandToSend = Commands.MOVE_FORWARD.getWhatToSend();
                         break;
                     case R.id.down_button:
-                        command = DOWN;
+                        commandToSend = Commands.MOVE_BACKWARDS.getWhatToSend();
                         break;
                     case R.id.left_button:
-                        command = LEFT;
+                        commandToSend = Commands.TURN_LEFT.getWhatToSend();
                         break;
                     case R.id.right_button:
-                        command = RIGHT;
+                        commandToSend = Commands.TURN_RIGHT.getWhatToSend();
                         break;
                 }
-                if (command != 0) {
-                    commandSender = new CommandSender(command);
-                    commandSender.start();
-                }
+                BTController.getInstance().sendCommand(commandToSend);
+                updateStatusText(COMMAND_SENT_ID, Integer.valueOf(commandToSend));
+
                 break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_OUTSIDE:
-                if (commandSender != null) {
-                    commandSender.stopSendingCommand();
-                    commandSender = null;
-                }
+                commandToSend = Commands.STOP.getWhatToSend();
+                BTController.getInstance().sendCommand(commandToSend);
+                updateStatusText(COMMAND_SENT_ID, Integer.valueOf(commandToSend));
                 break;
         }
         return false;
-    }
-
-    class CommandSender extends Thread {
-        private byte command;
-        private boolean stop = false;
-
-        public CommandSender(byte command) {
-            this.command = command;
-        }
-
-        public void stopSendingCommand() {
-            stop = true;
-        }
-
-        @Override
-        public void run() {
-            while (!stop) {
-                BTController.getInstance().sendCommand(command);
-                //handler.obtainMessage(command).sendToTarget();
-                // try {
-                    // Just a short pause in case the button is kept pressed. Worth trying without this pause at all.
-                    // Thread.sleep(100);
-                // } catch (InterruptedException e) {
-                //    e.printStackTrace();
-                // }
-            }
-        }
     }
 }
