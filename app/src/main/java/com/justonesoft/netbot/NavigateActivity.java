@@ -1,20 +1,23 @@
 package com.justonesoft.netbot;
 
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
+import android.hardware.Camera;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.ActionBarActivity;
-import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import com.justonesoft.netbot.bt.BTController;
+import com.justonesoft.netbot.camera.CameraManager;
+import com.justonesoft.netbot.camera.CameraPreview;
 import com.justonesoft.netbot.util.Commands;
 import com.justonesoft.netbot.util.StatusTextUpdater;
 import com.justonesoft.netbot.util.StatusTextUpdaterManager;
@@ -35,6 +38,9 @@ public class NavigateActivity extends ActionBarActivity implements View.OnTouchL
 
     private BluetoothDevice bluetoothDevice;
     private Handler handler;
+
+    private Camera mCamera;
+    private CameraPreview mPreview;
 
     @Override
     public void updateStatusText(int statusType, Object payload) {
@@ -100,6 +106,14 @@ public class NavigateActivity extends ActionBarActivity implements View.OnTouchL
         };
 
         StatusTextUpdaterManager.registerTextUpdater(TEXT_UPDATER_ID, this);
+
+        // Create an instance of Camera
+        mCamera = CameraManager.getCameraInstance();
+
+        // Create our Preview view and set it as the content of our activity.
+        mPreview = new CameraPreview(this, mCamera);
+        FrameLayout preview = (FrameLayout) findViewById(R.id.camera_frame);
+        preview.addView(mPreview);
     }
 
     private void addTouchClickEventsToButtons() {
