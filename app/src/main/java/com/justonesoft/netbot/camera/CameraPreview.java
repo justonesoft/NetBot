@@ -41,13 +41,11 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                 Log.i(TAG, "Size: w-" + cSize.width + " : h-"+cSize.height);
             }
 
-             mCamera.setDisplayOrientation(90);
+            mCamera.setDisplayOrientation(90);
             Camera.Parameters params = mCamera.getParameters();
             params.setColorEffect(android.hardware.Camera.Parameters.EFFECT_MONO);
-            params.setPreviewSize(200, 40);
             mCamera.setParameters(params);
             mCamera.startPreview();
-
 
         } catch (IOException e) {
             Log.d(TAG, "Error setting camera preview: " + e.getMessage());
@@ -80,7 +78,6 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         mCamera.setDisplayOrientation(90);
         Camera.Parameters params = mCamera.getParameters();
         params.setColorEffect(android.hardware.Camera.Parameters.EFFECT_MONO);
-        params.setPreviewSize(200, 40);
         mCamera.setParameters(params);
 
         //

@@ -3,6 +3,9 @@ package com.justonesoft.netbot.camera;
 import android.hardware.Camera;
 import android.util.Log;
 
+import com.justonesoft.netbot.CameraStreamingActivity;
+import com.justonesoft.netbot.util.StatusTextUpdaterManager;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -19,7 +22,8 @@ public class CameraManager {
             c = Camera.open(); // attempt to get a Camera instance
         }
         catch (Exception e){
-
+            StatusTextUpdaterManager.updateStatusText(CameraStreamingActivity.TEXT_UPDATE_ID, "Could not open camera");
+            Log.d("CameraManager", "Camera open error: " + e.getMessage());
         }
         return c; // returns null if camera is unavailable
     }

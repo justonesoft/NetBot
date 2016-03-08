@@ -6,7 +6,10 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-feature android:name="android.hardware.camera" android:required="false" />
+
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
 
     <application
         android:allowBackup="true"
@@ -21,10 +24,26 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity>viu
         <activity
             android:name=".NavigateActivity"
             android:label="@string/title_activity_navigate"
+            android:parentActivityName=".SelectBTActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.justonesoft.netbot.SelectBTActivity" />
+        </activity>
+        <activity
+            android:name=".SelectBTActivity"
+            android:label="@string/title_select_bt"
+            android:parentActivityName=".MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.justonesoft.netbot.MainActivity" />
+        </activity>
+        <activity
+            android:name=".CameraStreamingActivity"
+            android:label="@string/title_activity_camera_streaming"
             android:parentActivityName=".MainActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

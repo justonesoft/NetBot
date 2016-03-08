@@ -34,13 +34,10 @@ public class NavigateActivity extends ActionBarActivity implements View.OnTouchL
 
     public final static int COMMAND_SENT_ID = 100;
     public final static int TEXT = 101;
-    public final static int TEXT_UPDATER_ID = 1;
+    public final static int TEXT_UPDATER_ID = StatusTextUpdaterManager.nextId();
 
     private BluetoothDevice bluetoothDevice;
     private Handler handler;
-
-    private Camera mCamera;
-    private CameraPreview mPreview;
 
     @Override
     public void updateStatusText(int statusType, Object payload) {
@@ -107,13 +104,6 @@ public class NavigateActivity extends ActionBarActivity implements View.OnTouchL
 
         StatusTextUpdaterManager.registerTextUpdater(TEXT_UPDATER_ID, this);
 
-        // Create an instance of Camera
-        mCamera = CameraManager.getCameraInstance();
-
-        // Create our Preview view and set it as the content of our activity.
-        mPreview = new CameraPreview(this, mCamera);
-        FrameLayout preview = (FrameLayout) findViewById(R.id.camera_frame);
-        preview.addView(mPreview);
     }
 
     private void addTouchClickEventsToButtons() {
