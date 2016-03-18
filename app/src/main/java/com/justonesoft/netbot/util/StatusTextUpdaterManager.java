@@ -13,18 +13,22 @@ public class StatusTextUpdaterManager {
     private static HashMap<Integer, StatusTextUpdater> pool = new HashMap<Integer, StatusTextUpdater>();
 
     public static void registerTextUpdater(int textUpdaterId, StatusTextUpdater textUpdater) {
+        if (textUpdater == null) return;
         pool.put(textUpdaterId, textUpdater);
     }
 
     public static void updateStatusText(int textUpdaterId, int statusType, Object payload) {
+        if (pool.get(textUpdaterId) == null) return;
         pool.get(textUpdaterId).updateStatusText(statusType, payload);
     }
 
     public static void updateStatusText(int textUpdaterId, String statusText) {
+        if (pool.get(textUpdaterId) == null) return;
         pool.get(textUpdaterId).updateStatusText(statusText);
     }
 
     public static void updateStatusText(int textUpdaterId, int statusType) {
+        if (pool.get(textUpdaterId) == null) return;
         pool.get(textUpdaterId).updateStatusText(statusType);
     }
 

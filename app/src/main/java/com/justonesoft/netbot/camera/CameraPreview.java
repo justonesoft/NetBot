@@ -45,7 +45,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             Camera.Parameters params = mCamera.getParameters();
             params.setColorEffect(android.hardware.Camera.Parameters.EFFECT_MONO);
             mCamera.setParameters(params);
-            mCamera.startPreview();
+            CameraManager.startCameraPreview(mCamera);
 
         } catch (IOException e) {
             Log.d(TAG, "Error setting camera preview: " + e.getMessage());
@@ -67,7 +67,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
         // stop preview before making changes
         try {
-            mCamera.stopPreview();
+            CameraManager.stopCameraPreview(mCamera);
         } catch (Exception e){
             // ignore: tried to stop a non-existent preview
         }
@@ -85,7 +85,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         // start preview with new settings
         try {
             mCamera.setPreviewDisplay(mHolder);
-            mCamera.startPreview();
+            CameraManager.startCameraPreview(mCamera);
 
         } catch (Exception e){
             Log.d(TAG, "Error starting camera preview: " + e.getMessage());
