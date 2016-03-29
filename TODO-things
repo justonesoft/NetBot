@@ -1,6 +1,26 @@
 TODO
-  - rotate image to capture in portrait not landscape
-    - the preview is already rotated
-  - set a dimension for the image being captured
-  - in CameraStreamingActivity.prepareFOrStreaming, the socket creation needs to be doen in an AsynTask
-    - see SocketFactory.getConnectedSocket
+
+Stuff to fix / improve
+	- rotate image to capture in portrait not landscape
+		- the preview is already rotated
+	- set a dimension for the image being captured
+	- in CameraStreamingActivity.prepareFOrStreaming, the socket creation needs to be doen in an AsynTask
+		- see SocketFactory.getConnectedSocket
+	- in CameraStreamingActivity.stopStreaming
+		- close the Socket
+		- close/destroy the ImageStreamer
+	
+Base activity for the purpose of this Android Application
+	- has a preview frame to render camera preview
+	- at startup (onCreate or onResume) tries to connect to the Server
+		- server connection details can be saved in a Preferences type data
+		- or hardcoded :)
+	- can also connect to Bluetooth at startup
+	- stays connected to the server Socket for 1 minute, waiting for commands from server
+		- if no commands are received in 1 minute, disconnnects from socket and waits for another 1 minute\
+	- same connection times can apply to staying connected to Bluetooth
+	- when a command is received
+		- connect to Bluetooth if not already connected
+		- start listening/waiting for other commands
+		- start streaming images
+			- this can happen imediatly or based ona specific command that means just that
