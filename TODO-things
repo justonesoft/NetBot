@@ -1,0 +1,6 @@
+TODO
+  - rotate image to capture in portrait not landscape
+    - the preview is already rotated
+  - set a dimension for the image being captured
+  - in CameraStreamingActivity.prepareFOrStreaming, the socket creation needs to be doen in an AsynTask
+    - see SocketFactory.getConnectedSocket
