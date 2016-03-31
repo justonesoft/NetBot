@@ -64,14 +64,11 @@ public class StreamingThread {
         return dataQueue.offer(payload);
     }
 
-    //
+
     public void stopStreaming() {
         this.streaming = false;
     }
 
-    public boolean isReady() {
-        return streaming && dataQueue.size() < 2;
-    }
     public boolean startStreaming() {
         if (streaming || currentStreamingRunning) return false; //already streaming
 
