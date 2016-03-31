@@ -9,6 +9,7 @@ Stuff to fix / improve
 	- in CameraStreamingActivity.stopStreaming
 		- close the Socket
 		- close/destroy the ImageStreamer
+	- review the impementation of start* and disconnect* methods in IOTAccessPointActivity
 	
 Base activity for the purpose of this Android Application
 	- has a preview frame to render camera preview

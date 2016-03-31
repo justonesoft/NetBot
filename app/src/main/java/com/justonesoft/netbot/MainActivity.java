@@ -74,6 +74,11 @@ public class MainActivity extends Activity {
         startActivity(cameraStreamingActivity);
     }
 
+    private void openIOTAccessPointActivity() {
+        Intent iotAccessPointActivity = new Intent(this, IOTAccessPointActivity.class);
+        startActivity(iotAccessPointActivity);
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -108,6 +113,5 @@ public class MainActivity extends Activity {
         openCameraStreamingActivity();
     }
 
-    public void startIOTAccessPoint(View view) {
-    }
+    public void startIOTAccessPoint(View view) { openIOTAccessPointActivity(); }
 }
