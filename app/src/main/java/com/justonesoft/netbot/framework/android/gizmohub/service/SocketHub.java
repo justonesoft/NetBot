@@ -1,11 +1,13 @@
-package com.justonesoft.netbot.framework.gizmohub.service;
+package com.justonesoft.netbot.framework.android.gizmohub.service;
+
+import android.os.Handler;
 
 import com.justonesoft.netbot.camera.ImageStreamer;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -19,40 +21,33 @@ public class SocketHub implements Hub {
     private final int port;
     private Socket socket;
     private ExecutorService executor;
-
+    private Future<Socket> futureForSocket;
     public SocketHub(String address, int port) {
         this.address = address;
         this.port = port;
         this.executor = Executors.newSingleThreadExecutor();
     }
 
-    public Future<Hub> connect() {
-
+    public Hub connect() {
         if (isConnected()) {
-            FutureTask<Hub> dummyTask= new FutureTask<Hub>(new Runnable() {
-                @Override
-                public void run() {
-                    //dummy doesn't do anything
-                }
-            },
-            this);
-            dummyTask.run();
-            return dummyTask;
+            return this;
         }
 
         // try to establish a new connection
-        return executor.submit(new Runnable() {
+        futureForSocket = executor.submit(new Callable<Socket>() {
             @Override
-            public void run() {
+            public Socket call() {
                 try {
                     socket = new Socket();
-                    socket.connect(new InetSocketAddress( address, port ));
+                    socket.connect(new InetSocketAddress(address, port));
+                    return socket;
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                return null;
             }
-        },
-        (Hub) this);
+        });
+        return this;
     }
 
     @Override
@@ -91,5 +86,10 @@ public class SocketHub implements Hub {
     @Override
     public CommandListener giveMeBluetoothCommandListener(String pairedDeviceName) {
         return null;
+    }
+
+    @Override
+    public CommandListener giveMeUICommandListener(Handler uiHandler) {
+        return new UICommandListener(futureForSocket, uiHandler);
     }
 }

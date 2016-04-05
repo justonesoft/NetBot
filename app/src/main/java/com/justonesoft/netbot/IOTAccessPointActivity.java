@@ -3,14 +3,21 @@ package com.justonesoft.netbot;
 import android.hardware.Camera;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.ActionBarActivity;
 import android.text.method.ScrollingMovementMethod;
 import android.widget.TextView;
 
-import com.justonesoft.netbot.framework.gizmohub.service.Hub;
-import com.justonesoft.netbot.framework.gizmohub.service.SocketHub;
+import com.justonesoft.netbot.framework.android.gizmohub.async.HubConnectAsyncTask;
+import com.justonesoft.netbot.framework.android.gizmohub.service.CommandListener;
+import com.justonesoft.netbot.framework.android.gizmohub.service.Hub;
+import com.justonesoft.netbot.framework.android.gizmohub.service.HubFactory;
+import com.justonesoft.netbot.util.StatusTextUpdater;
+import com.justonesoft.netbot.util.StatusUpdateHandler;
 
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.net.Socket;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -31,12 +38,12 @@ public class IOTAccessPointActivity extends ActionBarActivity {
     private boolean isBluetoothConnected = false;
 
     private final static String BLUETOOTH_DEVICE_NAME = "HC-05";
-    private final static String HUB_SERVER_NAME = "10.45.51.208";
+    private final static String HUB_SERVER_NAME = "172.20.7.135";
     private final static int HUB_SERVER_PORT = 9999;
 
     private TextView status_text_view;
 
-    SocketHub hub = new SocketHub(HUB_SERVER_NAME, HUB_SERVER_PORT);
+    private Hub hub;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,31 +57,18 @@ public class IOTAccessPointActivity extends ActionBarActivity {
         // now we try to connect to server
         status_text_view.setText("Trying to connect...\n");
 
-        new AsyncTask<Hub, Void, Hub>() {
+        if (hub == null) {
+            hub = HubFactory.getHub(HUB_SERVER_NAME, HUB_SERVER_PORT);
+        }
 
-            @Override
-            protected Hub doInBackground(Hub... params) {
-                Hub hub = params[0];
-                Future<Hub> hubFuture = hub.connect();
-                try {
-                    return hubFuture.get();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (ExecutionException e) {
-                    e.printStackTrace();
-                }
-                return null;
-            };
+        hub.connect();
 
-            @Override
-            protected void onPostExecute(Hub hub) {
-                if (hub.isConnected()) {
-                    status_text_view.setText("Connected...\n");
-                } else {
-                    status_text_view.setText("Could not connect...\n");
-                }
-            }
-        }.execute(hub);
+        // now get the command listener and start waiting for commands
+
+        StatusUpdateHandler statusTextUpdater = new StatusUpdateHandler(status_text_view);
+
+        CommandListener commandListener = hub.giveMeUICommandListener(statusTextUpdater);
+        commandListener.listenAndExecuteCommands();
 
 //        status_text_view.post(new Runnable() {
 //            public void run() {
