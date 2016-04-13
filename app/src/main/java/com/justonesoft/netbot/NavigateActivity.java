@@ -64,15 +64,7 @@ public class NavigateActivity extends ActionBarActivity implements View.OnTouchL
         if (intent != null) {
             // get the device address; this has been put here by the MainActivity activity
             String deviceAddress = intent.getStringExtra(MainActivity.BT_DEVICE_MAC);
-
-            // look for the actual BluetoothDevice
-            Set<BluetoothDevice> pairedDevices = BTController.getInstance().getPairedDevices();
-
-            for (BluetoothDevice bt : pairedDevices) {
-                if (bt.getAddress().equals(deviceAddress)) {
-                    this.bluetoothDevice = bt;
-                }
-            }
+            this.bluetoothDevice = BTController.getInstance().getPairedBTDeviceByAddress(deviceAddress);
         }
 
         // register the click and longClick events for buttons
@@ -174,7 +166,7 @@ public class NavigateActivity extends ActionBarActivity implements View.OnTouchL
         switch (event.getAction()) {
             // identify the event
             case MotionEvent.ACTION_DOWN:
-                // start sending commands
+                // connect sending commands
                 byte commandToSend = Commands.STOP.getWhatToSend();
                 // identify the component
                 switch (v.getId()) {

@@ -72,7 +72,7 @@ public class StreamingThread {
     public boolean startStreaming() {
         if (streaming || currentStreamingRunning) return false; //already streaming
 
-        // start a thread with the runnable
+        // connect a thread with the runnable
         new Thread(runnable).start();
         streaming = true;
 

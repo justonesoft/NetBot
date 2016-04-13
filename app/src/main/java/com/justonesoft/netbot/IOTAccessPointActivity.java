@@ -1,30 +1,25 @@
 package com.justonesoft.netbot;
 
 import android.hardware.Camera;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.support.v7.app.ActionBarActivity;
 import android.text.method.ScrollingMovementMethod;
+import android.util.Log;
+import android.view.View;
+import android.widget.EditText;
 import android.widget.TextView;
 
-import com.justonesoft.netbot.framework.android.gizmohub.async.HubConnectAsyncTask;
-import com.justonesoft.netbot.framework.android.gizmohub.service.CommandListener;
+import com.justonesoft.netbot.bt.BTController;
+import com.justonesoft.netbot.framework.android.gizmohub.service.BTCommandListener;
 import com.justonesoft.netbot.framework.android.gizmohub.service.Hub;
-import com.justonesoft.netbot.framework.android.gizmohub.service.HubFactory;
-import com.justonesoft.netbot.util.StatusTextUpdater;
+import com.justonesoft.netbot.framework.android.gizmohub.service.ServiceGateway;
+import com.justonesoft.netbot.framework.android.gizmohub.service.UICommandListener;
 import com.justonesoft.netbot.util.StatusUpdateHandler;
 
 import java.io.IOException;
-import java.lang.ref.WeakReference;
 import java.net.Socket;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 public class IOTAccessPointActivity extends ActionBarActivity {
-
-    private Socket socket;
 
     /**
      *
@@ -34,19 +29,19 @@ public class IOTAccessPointActivity extends ActionBarActivity {
 
     private Camera camera;
 
-    private boolean isSocketConnected = false;
     private boolean isBluetoothConnected = false;
 
     private final static String BLUETOOTH_DEVICE_NAME = "HC-05";
-    private final static String HUB_SERVER_NAME = "172.20.7.135";
+    private final static String HUB_SERVER_NAME = "52.24.132.239";
     private final static int HUB_SERVER_PORT = 9999;
 
     private TextView status_text_view;
 
-    private Hub hub;
+    ServiceGateway gateway;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.d("LIFE_FLOW", "onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_iotaccess_point);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -57,24 +52,70 @@ public class IOTAccessPointActivity extends ActionBarActivity {
         // now we try to connect to server
         status_text_view.setText("Trying to connect...\n");
 
-        if (hub == null) {
-            hub = HubFactory.getHub(HUB_SERVER_NAME, HUB_SERVER_PORT);
+        EditText serverAddressEdit = (EditText) findViewById(R.id.server_address);
+        serverAddressEdit.setText(HUB_SERVER_NAME);
+
+        try {
+            connectToGateway(HUB_SERVER_NAME, HUB_SERVER_PORT);
+        } catch (Exception e) {
+            e.printStackTrace();
+            status_text_view.setText("Could not connect!\n");
         }
 
-        hub.connect();
-
-        // now get the command listener and start waiting for commands
-
-        StatusUpdateHandler statusTextUpdater = new StatusUpdateHandler(status_text_view);
-
-        CommandListener commandListener = hub.giveMeUICommandListener(statusTextUpdater);
-        commandListener.listenAndExecuteCommands();
+//        if (hub == null) {
+//            hub = HubFactory.getHub(HUB_SERVER_NAME, HUB_SERVER_PORT);
+//        }
+//
+//        hub.connect();
+//
+//        // now get the command listener and connect waiting for commands
+//
+//        StatusUpdateHandler statusTextUpdater = new StatusUpdateHandler(status_text_view);
+//
+//        CommandListener commandListener = hub.giveMeUICommandListener(statusTextUpdater);
+//        commandListener.listenAndExecuteCommands();
+//
+//        CommandListener btCommandListener = hub.giveMeBluetoothCommandListener(BLUETOOTH_DEVICE_NAME);
+//        commandListener.listenAndExecuteCommands();
 
 //        status_text_view.post(new Runnable() {
 //            public void run() {
 //                status_text_view.scrollTo(0, status_text_view.getBottom());
 //            }
 //        });
+    }
+
+    private void connectToGateway(String serverAddress, int serverPort) throws IOException {
+
+        StatusUpdateHandler statusTextUpdater = new StatusUpdateHandler(status_text_view);
+
+        if (gateway == null) {
+            gateway = new ServiceGateway(serverAddress, serverPort);
+            gateway.registerCommandListener(new BTCommandListener(BLUETOOTH_DEVICE_NAME));
+            gateway.registerCommandListener(new UICommandListener(statusTextUpdater));
+        }
+
+        if (gateway != null && !gateway.isConnected()) {
+            gateway.connect();
+        }
+    }
+
+    public void reconnect(View view) {
+        if (gateway != null && gateway.isConnected()) {
+            gateway.disconnect();
+            gateway = null; // needs to be null for connectToGateway method
+        }
+        // now we try to connect to server
+        status_text_view.setText("Trying to connect...\n");
+
+        EditText serverAddressEdit = (EditText) findViewById(R.id.server_address);
+        String serverAddress = serverAddressEdit.getText().toString();
+        try {
+            connectToGateway(serverAddress, HUB_SERVER_PORT);
+        } catch (Exception e) {
+            e.printStackTrace();
+            status_text_view.setText("Could not connect!\n");
+        }
     }
 
     private String createDummyText() {
@@ -86,24 +127,6 @@ public class IOTAccessPointActivity extends ActionBarActivity {
         }
 
         return s;
-    }
-
-    /**
-     * Try to connect to the Hub Server. <br />
-     * Should be called inside a AsyncTask.
-     *
-     */
-    private void connectToServer(String serverAddress, int serverPort) {
-        isSocketConnected = false;
-    }
-
-    /**
-     * Try to connect to the Bluetooth Device. <br />
-     * Should be called inside a AsyncTask.
-     *
-     */
-    private void connectToBluetooth(String bluetoothDeviceName) {
-        isBluetoothConnected = true;
     }
 
     private void startCameraPreview(Camera camera) {
@@ -118,24 +141,20 @@ public class IOTAccessPointActivity extends ActionBarActivity {
     }
 
     private void disconnectFromSocket() {
-        isSocketConnected = false;
-        if (socket != null) {
-            try {
-                socket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        if (gateway != null) {
+            gateway.disconnect();
         }
-        socket = null;
     }
 
     private void disconnectFromBluetooth() {
         isBluetoothConnected = false;
+        BTController.getInstance().disconnect();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        Log.d("LIFE_FLOW", "onDestroy");
 
         disconnectFromSocket();
         disconnectFromBluetooth();
@@ -145,9 +164,28 @@ public class IOTAccessPointActivity extends ActionBarActivity {
     @Override
     protected void onStop() {
         super.onStop();
+        Log.d("LIFE_FLOW", "onStop");
 
         disconnectFromSocket();
         disconnectFromBluetooth();
         disconnectAndReleaseCamera();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d("LIFE_FLOW", "onResume");
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        Log.d("LIFE_FLOW", "onRestart");
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d("LIFE_FLOW", "onPause");
     }
 }

@@ -1,7 +1,9 @@
 package com.justonesoft.netbot.framework.android.gizmohub.service;
 
+import android.bluetooth.BluetoothDevice;
 import android.os.Handler;
 
+import com.justonesoft.netbot.bt.BTController;
 import com.justonesoft.netbot.camera.ImageStreamer;
 
 import java.io.IOException;
@@ -85,11 +87,13 @@ public class SocketHub implements Hub {
 
     @Override
     public CommandListener giveMeBluetoothCommandListener(String pairedDeviceName) {
-        return null;
+        Future<Socket> futureSocket = SocketManager.newConnectedSocket();
+        return new BTCommandListener(pairedDeviceName);
     }
 
     @Override
     public CommandListener giveMeUICommandListener(Handler uiHandler) {
-        return new UICommandListener(futureForSocket, uiHandler);
+        Future<Socket> futureSocket = SocketManager.newConnectedSocket();
+        return new UICommandListener(uiHandler);
     }
 }

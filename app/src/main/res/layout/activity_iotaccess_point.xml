@@ -12,7 +12,29 @@
         android:layout_alignParentStart="true"
         android:id="@+id/camera_preview_frame" />
 
-        <TextView
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_above="@+id/status_text">
+
+        <EditText
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/server_address"
+            android:hint="@string/hint_server_address"
+            android:layout_weight="1" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/button_text_refresh"
+            android:onClick="reconnect"
+            android:nestedScrollingEnabled="false" />
+    </LinearLayout>
+
+    <TextView
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"

@@ -25,3 +25,4 @@ Base activity for the purpose of this Android Application
 		- start listening/waiting for other commands
 		- start streaming images
 			- this can happen imediatly or based ona specific command that means just that
+			

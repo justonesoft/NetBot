@@ -1,32 +1,34 @@
 package com.justonesoft.netbot.framework.android.gizmohub.service;
 
-import android.os.Handler;
-
+import android.bluetooth.BluetoothDevice;
+import com.justonesoft.netbot.bt.BTController;
 import com.justonesoft.netbot.framework.android.gizmohub.protocol.Message;
 import com.justonesoft.netbot.framework.android.gizmohub.protocol.MessageType;
 
 /**
- * Created by bmunteanu on 4/1/2016.
- *
- * Waits for something to come over InputStream and updates the UI accordingly
- *
+ * Created by bmunteanu on 4/6/2016.
  */
-public class UICommandListener implements CommandListener<Integer> {
+public class BTCommandListener implements CommandListener<Byte> {
 
-    private Handler uiHandler;
+    public BTCommandListener(String pairedDeviceName) {
+        BluetoothDevice btDevice = BTController.getInstance().getPairedBTDeviceByName(pairedDeviceName);
+        if (btDevice == null) return; // or throw exception?
 
-    public UICommandListener(Handler uiHandler) {
-        this.uiHandler = uiHandler;
+        // connect with the device
+        BTController.getInstance().connectWithBTDevice(btDevice);
     }
 
     @Override
     public boolean isInterestedIn(MessageType messageType) {
-        return MessageType.UI.equals(messageType);
+        return MessageType.BLUETOOTH.equals(messageType);
     }
 
     @Override
-    public void dealWithMessage(Message<Integer> message) {
-        uiHandler.obtainMessage(1, "Command received: " + message.getPayload()).sendToTarget();
+    public void dealWithMessage(Message<Byte> message) {
+        if (message ==  null) return;
+        if (isInterestedIn(message.getType())) {
+            BTController.getInstance().sendCommand(message.getPayload());
+        }
     }
 
 //    @Override
@@ -39,15 +41,13 @@ public class UICommandListener implements CommandListener<Integer> {
 //                    if (socket == null) return;
 //
 //                    dataStream = new DataInputStream(socket.getInputStream());
-//                    uiHandler.obtainMessage(1, "Waiting for data").sendToTarget();
 //                    while (true) {
 //                        try {
 //                            int dataFromSocket = dataStream.read(); // or use readByte and catch EOFException
 //                            if (dataFromSocket == -1) {
-//                                uiHandler.obtainMessage(1, "End of transmission").sendToTarget();
 //                                break;
 //                            }
-//                            uiHandler.obtainMessage(1, "Command received: " + dataFromSocket).sendToTarget();
+//                            BTController.getInstance().sendCommand(Byte.valueOf((byte) dataFromSocket));
 //                        } catch (IOException e) {
 //                            e.printStackTrace();
 //                            break;
