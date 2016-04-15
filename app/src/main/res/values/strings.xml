@@ -21,4 +21,18 @@
     <string name="err_no_communication">ERROR: Could not communicate with device!</string>
     <string name="bluetooth_communication_ready">Ready to send commands !</string>
     <string name="err_already_sending_command">Already sending a command!</string>
+    <string name="title_main_select_mode">Select operation mode</string>
+    <string name="text_remote_control">Remote Control</string>
+    <string name="text_camera_streaming_button">Camera Streaming</string>
+    <string name="text_iot_access_point_button">IOT Access Point</string>
+    <string name="title_select_bt">Select BT Device</string>
+    <string name="title_activity_camera_streaming">CameraStreamingActivity</string>
+    <string name="start_streaming_button">Start Stream</string>
+    <string name="stop_streaming_button">Stop Stream</string>
+    <string name="streaming_button">Streaming</string>
+    <string name="not_streaming_button">Not Streaming</string>
+    <string name="text_conn_status">Connection Status</string>
+    <string name="title_activity_iotaccess_point">IOTAccessPointActivity</string>
+    <string name="hint_server_address">ServerAddress</string>
+    <string name="button_text_refresh">Refresh</string>
 </resources>

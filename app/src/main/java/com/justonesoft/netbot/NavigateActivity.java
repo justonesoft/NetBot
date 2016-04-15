@@ -1,20 +1,23 @@
 package com.justonesoft.netbot;
 
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
+import android.hardware.Camera;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.ActionBarActivity;
-import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import com.justonesoft.netbot.bt.BTController;
+import com.justonesoft.netbot.camera.CameraManager;
+import com.justonesoft.netbot.camera.CameraPreview;
 import com.justonesoft.netbot.util.Commands;
 import com.justonesoft.netbot.util.StatusTextUpdater;
 import com.justonesoft.netbot.util.StatusTextUpdaterManager;
@@ -31,7 +34,7 @@ public class NavigateActivity extends ActionBarActivity implements View.OnTouchL
 
     public final static int COMMAND_SENT_ID = 100;
     public final static int TEXT = 101;
-    public final static int TEXT_UPDATER_ID = 1;
+    public final static int TEXT_UPDATER_ID = StatusTextUpdaterManager.nextId();
 
     private BluetoothDevice bluetoothDevice;
     private Handler handler;
@@ -61,15 +64,7 @@ public class NavigateActivity extends ActionBarActivity implements View.OnTouchL
         if (intent != null) {
             // get the device address; this has been put here by the MainActivity activity
             String deviceAddress = intent.getStringExtra(MainActivity.BT_DEVICE_MAC);
-
-            // look for the actual BluetoothDevice
-            Set<BluetoothDevice> pairedDevices = BTController.getInstance().getPairedDevices();
-
-            for (BluetoothDevice bt : pairedDevices) {
-                if (bt.getAddress().equals(deviceAddress)) {
-                    this.bluetoothDevice = bt;
-                }
-            }
+            this.bluetoothDevice = BTController.getInstance().getPairedBTDeviceByAddress(deviceAddress);
         }
 
         // register the click and longClick events for buttons
@@ -100,6 +95,7 @@ public class NavigateActivity extends ActionBarActivity implements View.OnTouchL
         };
 
         StatusTextUpdaterManager.registerTextUpdater(TEXT_UPDATER_ID, this);
+
     }
 
     private void addTouchClickEventsToButtons() {
@@ -170,7 +166,7 @@ public class NavigateActivity extends ActionBarActivity implements View.OnTouchL
         switch (event.getAction()) {
             // identify the event
             case MotionEvent.ACTION_DOWN:
-                // start sending commands
+                // connect sending commands
                 byte commandToSend = Commands.STOP.getWhatToSend();
                 // identify the component
                 switch (v.getId()) {

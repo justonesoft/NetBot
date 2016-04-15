@@ -1,4 +1,4 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="horizontal"
     android:layout_width="match_parent"
@@ -7,19 +7,21 @@
 
     <LinearLayout
         android:orientation="vertical"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:layout_weight="1">
+        android:layout_alignParentLeft="false"
+        android:layout_alignParentTop="true"
+        android:id="@+id/linearLayout3">
 
         <Button
-            android:layout_width="fill_parent"
+            android:layout_width="wrap_content"
             android:layout_height="0dp"
             android:text="@string/up_button"
             android:id="@+id/up_button"
             android:layout_weight="1" />
 
         <Button
-            android:layout_width="fill_parent"
+            android:layout_width="wrap_content"
             android:layout_height="0dp"
             android:text="@string/left_button"
             android:id="@+id/left_button"
@@ -27,31 +29,37 @@
     </LinearLayout>
 
     <TextView
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="2"
         android:scrollbars="vertical"
-        android:id="@+id/nav_status_text" />
+        android:id="@+id/nav_status_text"
+        android:layout_alignParentTop="true"
+        android:layout_toRightOf="@+id/linearLayout3"
+        android:layout_toLeftOf="@+id/linearLayout4"
+        android:layout_toStartOf="@+id/linearLayout4" />
 
     <LinearLayout
         android:orientation="vertical"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:layout_weight="1">
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:id="@+id/linearLayout4"
+        android:layout_alignParentRight="true">
 
         <Button
-            android:layout_width="fill_parent"
+            android:layout_width="wrap_content"
             android:layout_height="0dp"
             android:text="@string/down_button"
             android:id="@+id/down_button"
             android:layout_weight="1" />
 
         <Button
-            android:layout_width="fill_parent"
+            android:layout_width="wrap_content"
             android:layout_height="0dp"
             android:text="@string/right_button"
             android:id="@+id/right_button"
             android:layout_weight="1" />
     </LinearLayout>
 
-</LinearLayout>
+</RelativeLayout>

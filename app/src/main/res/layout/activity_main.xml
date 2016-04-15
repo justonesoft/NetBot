@@ -1,30 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" android:id="@+id/container"
-    android:orientation="vertical"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".MainActivity" tools:ignore="MergeRootFrame" >
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/lb_paired_devices"
-            android:id="@+id/textView"
-            android:textSize="@dimen/abc_text_size_title_material"
-            android:labelFor="@+id/listPairedDevices" />
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="@string/title_main_select_mode"
+        android:id="@+id/textView2" />
 
-        <ListView
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:id="@+id/listPairedDevices"
-            android:layout_weight="5" />
+    <Button
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/text_remote_control"
+        android:id="@+id/remote_control_button"
+        android:onClick="startRemoteControl" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:ems="10"
-            android:id="@+id/textStatus"
-            android:layout_weight="1"
-            android:linksClickable="false"
-            android:scrollbars="vertical" />
+    <Button
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/text_camera_streaming_button"
+        android:id="@+id/camera_streaming_button"
+        android:onClick="startCameraStreaming" />
+
+    <Button
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/text_iot_access_point_button"
+        android:id="@+id/iot_button"
+        android:onClick="startIOTAccessPoint" />
 </LinearLayout>
