@@ -64,18 +64,15 @@ public class StreamingThread {
         return dataQueue.offer(payload);
     }
 
-    //
+
     public void stopStreaming() {
         this.streaming = false;
     }
 
-    public boolean isReady() {
-        return streaming && dataQueue.size() < 2;
-    }
     public boolean startStreaming() {
         if (streaming || currentStreamingRunning) return false; //already streaming
 
-        // start a thread with the runnable
+        // connect a thread with the runnable
         new Thread(runnable).start();
         streaming = true;
 

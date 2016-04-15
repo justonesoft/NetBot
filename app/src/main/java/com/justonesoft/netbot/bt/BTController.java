@@ -3,18 +3,12 @@ package com.justonesoft.netbot.bt;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
-import android.widget.TextView;
+import android.widget.Toast;
 
 import com.justonesoft.netbot.NavigateActivity;
-import com.justonesoft.netbot.R;
 import com.justonesoft.netbot.communication.BluetoothCommunicator;
 import com.justonesoft.netbot.util.StatusTextUpdaterManager;
 import com.justonesoft.netbot.util.StatusUpdateType;
-import com.justonesoft.netbot.util.TextViewUtil;
-
 import java.io.IOException;
 import java.util.Set;
 import java.util.UUID;
@@ -73,6 +67,42 @@ public class BTController {
         return btAdapter.getBondedDevices();
     }
 
+    /**
+     * Looks through the list of Bluetooth paired devices and returns the {android.bluetooth.BluetoothDevice} with that address.
+     * @param deviceAddress - the device address
+     *
+     * @return Paired BLuetoothDevice with that address or null if no paired devices with that address is found
+     */
+    public BluetoothDevice getPairedBTDeviceByAddress(String deviceAddress) {
+        // look for the actual BluetoothDevice
+        Set<BluetoothDevice> pairedDevices = getPairedDevices();
+
+        for (BluetoothDevice bt : pairedDevices) {
+            if (bt.getAddress().equals(deviceAddress)) {
+                return bt;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Looks through the list of Bluetooth paired devices and returns the {android.bluetooth.BluetoothDevice} with that address.
+     * @param deviceName - the device address
+     *
+     * @return Paired BLuetoothDevice with that address or null if no paired devices with that address is found
+     */
+    public BluetoothDevice getPairedBTDeviceByName(String deviceName) {
+        // look for the actual BluetoothDevice
+        Set<BluetoothDevice> pairedDevices = BTController.getInstance().getPairedDevices();
+
+        for (BluetoothDevice bt : pairedDevices) {
+            if (bt.getName().equals(deviceName)) {
+                return bt;
+            }
+        }
+        return null;
+    }
+
     public void connectWithBTDevice(BluetoothDevice connectedDevice) {
         connectWithBTDevice(connectedDevice, DEFAULT_UUID);
     }
@@ -86,6 +116,7 @@ public class BTController {
         if (isConnected()) {
             // already connected
             // send a message to handler to update the UI with a message
+            Toast.makeText(null, "bla", Toast.LENGTH_SHORT).show();
             StatusTextUpdaterManager.updateStatusText(NavigateActivity.TEXT_UPDATER_ID, BT_STATUS, StatusUpdateType.BT_STATUS_CONNECTED);
             return;
         }
@@ -95,7 +126,7 @@ public class BTController {
             btSocket = connectedDevice.createRfcommSocketToServiceRecord(UUID.fromString(uuidString));
             // we need to connect in a separate thread because the connect method is blocking the thread
             BluetoothConnector connector = new BluetoothConnector(btSocket);
-            connector.start(); //start the connection process
+            connector.start(); //connect the connection process
         } catch (IOException e) {
             e.printStackTrace();
             StatusTextUpdaterManager.updateStatusText(NavigateActivity.TEXT_UPDATER_ID, BT_STATUS, StatusUpdateType.BT_STATUS_ERROR_NO_SOCKET);
