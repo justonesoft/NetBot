@@ -10,7 +10,7 @@
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:id="@+id/camera_preview_frame" />
+        android:id="@+id/camera_preview" />
 
     <LinearLayout
         android:orientation="horizontal"

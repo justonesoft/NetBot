@@ -5,6 +5,7 @@ import android.util.Log;
 import com.justonesoft.netbot.framework.android.gizmohub.protocol.Message;
 import com.justonesoft.netbot.framework.android.gizmohub.protocol.MessageType;
 import com.justonesoft.netbot.framework.android.gizmohub.protocol.ReadingProtocol;
+import com.justonesoft.netbot.framework.android.gizmohub.service.streaming.Streamer;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -35,7 +36,8 @@ public class ServiceGateway implements MessageReadyListener {
     private ExecutorService executor;
     private Future<Socket> futureForSocket;
 
-    private Collection<CommandListener> registeredListeners = new ArrayList<CommandListener>();
+    private Collection<CommandListener> registeredListeners = new ArrayList<>();
+    private Collection<Streamer> registeredStreamers = new ArrayList<>();
 
     private Selector selector;
 
@@ -58,6 +60,18 @@ public class ServiceGateway implements MessageReadyListener {
     public void registerCommandListener(CommandListener commandListener) {
         if (commandListener == null) return;
         registeredListeners.add(commandListener);
+    }
+
+    public void registerStreamer(Streamer streamer) {
+        if (streamer == null) return;
+        streamer.prepare();
+        this.registeredStreamers.add(streamer);
+    }
+
+    public void startStreaming() {
+        for (Streamer streamer : registeredStreamers) {
+            streamer.startStreaming();
+        }
     }
 
     public void connect() {
@@ -83,11 +97,11 @@ public class ServiceGateway implements MessageReadyListener {
                     while (retries <= MAX_RETRIES) {
                         try {
                             if (socketChannel.isConnected()) break;
+                            socketChannel = SocketChannel.open();
                             socketChannel.socket().connect(new InetSocketAddress(serverAddress, serverPort), (int) THREE_SECONDS * retries);
                         } catch (SocketTimeoutException timeout) {
                             timeout.printStackTrace();
                             retries++;
-                            socketChannel = SocketChannel.open();
                         } catch (Exception e) {
                             e.printStackTrace();
                             connected = false;
@@ -95,9 +109,17 @@ public class ServiceGateway implements MessageReadyListener {
                         }
                     }
 
-                    connected = true;
-
-                    Log.d("ServiceGateway", "Connected !!!");
+                    if (!socketChannel.isConnected()) {
+                        connected = false;
+                        Log.d("ServiceGateway", "Could Not Connected !!!");
+                        return null;
+                    } else {
+                        connected = true; //already true but it more clear
+                        Log.d("ServiceGateway", "Connected !!!");
+                        for (Streamer streamer : registeredStreamers) {
+                            streamer.setOutputStream(socketChannel.socket().getOutputStream());
+                        }
+                    }
 
                     socketChannel.configureBlocking(false);
                     socketChannel.register(selector, SelectionKey.OP_READ);
@@ -146,6 +168,9 @@ public class ServiceGateway implements MessageReadyListener {
 
     public void disconnect() {
         disconnect = true;
+        for (Streamer streamer : registeredStreamers) {
+            streamer.terminate();
+        }
     }
 
     @Override

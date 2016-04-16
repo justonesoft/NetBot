@@ -34,18 +34,19 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     public void surfaceCreated(SurfaceHolder holder) {
         // The Surface has been created, now tell the camera where to draw the preview.
         try {
-            mCamera.setPreviewDisplay(holder);
             List<Camera.Size> acceptedSizes = mCamera.getParameters().getSupportedPreviewSizes();
 
             for (Camera.Size cSize: acceptedSizes) {
                 Log.i(TAG, "Size: w-" + cSize.width + " : h-"+cSize.height);
             }
-
-            mCamera.setDisplayOrientation(90);
+            mCamera.stopPreview();
+            mCamera.setDisplayOrientation(90); // this will fail if activity is explicitly set
+            // to a specific orientation in AndroidManifest.xml or handles orientation changes
             Camera.Parameters params = mCamera.getParameters();
             params.setColorEffect(android.hardware.Camera.Parameters.EFFECT_MONO);
             mCamera.setParameters(params);
-            CameraManager.startCameraPreview(mCamera);
+            mCamera.setPreviewDisplay(holder);
+            mCamera.startPreview();
 
         } catch (IOException e) {
             Log.d(TAG, "Error setting camera preview: " + e.getMessage());
@@ -66,16 +67,13 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         }
 
         // stop preview before making changes
-        try {
-            CameraManager.stopCameraPreview(mCamera);
-        } catch (Exception e){
-            // ignore: tried to stop a non-existent preview
-        }
+        mCamera.stopPreview();
 
         // set preview size and make any resize, rotate or
         // reformatting changes here
 
-        mCamera.setDisplayOrientation(90);
+//            mCamera.setDisplayOrientation(90); // this will fail if activity is explicitly set
+        // to a specific orientation in AndroidManifest.xml or handles orientation changes
         Camera.Parameters params = mCamera.getParameters();
         params.setColorEffect(android.hardware.Camera.Parameters.EFFECT_MONO);
         mCamera.setParameters(params);
@@ -85,8 +83,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         // connect preview with new settings
         try {
             mCamera.setPreviewDisplay(mHolder);
-            CameraManager.startCameraPreview(mCamera);
-
+            mCamera.startPreview();
         } catch (Exception e){
             Log.d(TAG, "Error starting camera preview: " + e.getMessage());
         }

@@ -2,22 +2,23 @@ package com.justonesoft.netbot;
 
 import android.hardware.Camera;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import com.justonesoft.netbot.bt.BTController;
 import com.justonesoft.netbot.framework.android.gizmohub.service.BTCommandListener;
-import com.justonesoft.netbot.framework.android.gizmohub.service.Hub;
 import com.justonesoft.netbot.framework.android.gizmohub.service.ServiceGateway;
 import com.justonesoft.netbot.framework.android.gizmohub.service.UICommandListener;
+import com.justonesoft.netbot.framework.android.gizmohub.service.streaming.CameraStreamer;
 import com.justonesoft.netbot.util.StatusUpdateHandler;
 
 import java.io.IOException;
-import java.net.Socket;
 
 public class IOTAccessPointActivity extends ActionBarActivity {
 
@@ -55,28 +56,20 @@ public class IOTAccessPointActivity extends ActionBarActivity {
         EditText serverAddressEdit = (EditText) findViewById(R.id.server_address);
         serverAddressEdit.setText(HUB_SERVER_NAME);
 
+        final Handler handler = new Handler();
         try {
             connectToGateway(HUB_SERVER_NAME, HUB_SERVER_PORT);
+            // just for test
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    gateway.disconnect();
+                }
+            }, 15000);
         } catch (Exception e) {
             e.printStackTrace();
             status_text_view.setText("Could not connect!\n");
         }
-
-//        if (hub == null) {
-//            hub = HubFactory.getHub(HUB_SERVER_NAME, HUB_SERVER_PORT);
-//        }
-//
-//        hub.connect();
-//
-//        // now get the command listener and connect waiting for commands
-//
-//        StatusUpdateHandler statusTextUpdater = new StatusUpdateHandler(status_text_view);
-//
-//        CommandListener commandListener = hub.giveMeUICommandListener(statusTextUpdater);
-//        commandListener.listenAndExecuteCommands();
-//
-//        CommandListener btCommandListener = hub.giveMeBluetoothCommandListener(BLUETOOTH_DEVICE_NAME);
-//        commandListener.listenAndExecuteCommands();
 
 //        status_text_view.post(new Runnable() {
 //            public void run() {
@@ -174,6 +167,8 @@ public class IOTAccessPointActivity extends ActionBarActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        gateway.registerStreamer(new CameraStreamer((FrameLayout) findViewById(R.id.camera_preview)));
+        gateway.startStreaming();
         Log.d("LIFE_FLOW", "onResume");
     }
 
