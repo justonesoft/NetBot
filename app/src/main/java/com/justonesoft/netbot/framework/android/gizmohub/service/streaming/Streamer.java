@@ -1,5 +1,7 @@
 package com.justonesoft.netbot.framework.android.gizmohub.service.streaming;
 
+import com.justonesoft.netbot.framework.android.gizmohub.service.StreamingDataReadyListener;
+
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -13,4 +15,6 @@ public interface Streamer<T> {
     public boolean terminate();
     public void stream(T data) throws IOException;
     public void releaseStream();
+
+    void setStreamingDataReadyListener(StreamingDataReadyListener dataReadyListener);
 }

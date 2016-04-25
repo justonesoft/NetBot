@@ -39,7 +39,9 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             for (Camera.Size cSize: acceptedSizes) {
                 Log.i(TAG, "Size: w-" + cSize.width + " : h-"+cSize.height);
             }
+
             mCamera.stopPreview();
+
             mCamera.setDisplayOrientation(90); // this will fail if activity is explicitly set
             // to a specific orientation in AndroidManifest.xml or handles orientation changes
             Camera.Parameters params = mCamera.getParameters();

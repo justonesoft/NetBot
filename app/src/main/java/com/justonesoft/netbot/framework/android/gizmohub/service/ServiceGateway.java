@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -27,14 +28,14 @@ import java.util.concurrent.Future;
 /**
  * Created by bmunteanu on 4/8/2016.
  */
-public class ServiceGateway implements MessageReadyListener {
-    private static final long THREE_SECONDS = 3000;
+public class ServiceGateway implements MessageReadyListener, StreamingDataReadyListener {
+    private static final long THREE_SECONDS = 10000;
     private static final int CHUNK_BYTES_SIZE_TO_READ_FROM_CHANNEL = 4; // how many bytes to try to read at once from SocketChannel
 
     private final String serverAddress;
     private final int serverPort;
     private ExecutorService executor;
-    private Future<Socket> futureForSocket;
+    private Future<SocketChannel> futureForSocket;
 
     private Collection<CommandListener> registeredListeners = new ArrayList<>();
     private Collection<Streamer> registeredStreamers = new ArrayList<>();
@@ -43,6 +44,8 @@ public class ServiceGateway implements MessageReadyListener {
 
     private boolean disconnect = false;
     private boolean connected = false;
+
+    private SocketChannel socketChannel;
 
     private final ReadingProtocol readingProtocol;
 
@@ -65,12 +68,19 @@ public class ServiceGateway implements MessageReadyListener {
     public void registerStreamer(Streamer streamer) {
         if (streamer == null) return;
         streamer.prepare();
+        streamer.setStreamingDataReadyListener(this);
         this.registeredStreamers.add(streamer);
     }
 
     public void startStreaming() {
         for (Streamer streamer : registeredStreamers) {
             streamer.startStreaming();
+        }
+    }
+
+    public void stopStreaming() {
+        for (Streamer streamer : registeredStreamers) {
+            streamer.terminate();
         }
     }
 
@@ -81,10 +91,9 @@ public class ServiceGateway implements MessageReadyListener {
         final int MAX_RETRIES = 3;
 
         // try to establish a new connection
-        futureForSocket = executor.submit(new Callable<Socket>() {
+        futureForSocket = executor.submit(new Callable<SocketChannel>() {
             @Override
-            public Socket call() throws Exception {
-                SocketChannel socketChannel = null;
+            public SocketChannel call() throws Exception {
                 if (connected) return null;
                 connected = true; // even it is not yet, consider it is because we don't want some other thread to try connecting
                 try {
@@ -114,11 +123,8 @@ public class ServiceGateway implements MessageReadyListener {
                         Log.d("ServiceGateway", "Could Not Connected !!!");
                         return null;
                     } else {
-                        connected = true; //already true but it more clear
+                        connected = true; //already true but make it more clear
                         Log.d("ServiceGateway", "Connected !!!");
-                        for (Streamer streamer : registeredStreamers) {
-                            streamer.setOutputStream(socketChannel.socket().getOutputStream());
-                        }
                     }
 
                     socketChannel.configureBlocking(false);
@@ -161,16 +167,14 @@ public class ServiceGateway implements MessageReadyListener {
                     socketChannel = null;
                     connected = false;
                 }
-                return null;
+                return socketChannel;
             }
         });
     }
 
     public void disconnect() {
         disconnect = true;
-        for (Streamer streamer : registeredStreamers) {
-            streamer.terminate();
-        }
+        stopStreaming();
     }
 
     @Override
@@ -179,6 +183,18 @@ public class ServiceGateway implements MessageReadyListener {
             if (commandListener.isInterestedIn(message.getType())) {
                 commandListener.dealWithMessage(message);
             }
+        }
+    }
+
+    @Override
+    public void streamingDataReady(ByteBuffer dataBuffer) {
+        dataBuffer.flip();
+        try {
+            while (dataBuffer.hasRemaining()) {
+                socketChannel.write(dataBuffer);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

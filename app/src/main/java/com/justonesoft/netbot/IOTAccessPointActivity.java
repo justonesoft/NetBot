@@ -7,9 +7,11 @@ import android.support.v7.app.ActionBarActivity;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 
 import com.justonesoft.netbot.bt.BTController;
 import com.justonesoft.netbot.framework.android.gizmohub.service.BTCommandListener;
@@ -33,7 +35,7 @@ public class IOTAccessPointActivity extends ActionBarActivity {
     private boolean isBluetoothConnected = false;
 
     private final static String BLUETOOTH_DEVICE_NAME = "HC-05";
-    private final static String HUB_SERVER_NAME = "52.24.132.239";
+    private final static String HUB_SERVER_NAME = "52.39.100.10";
     private final static int HUB_SERVER_PORT = 9999;
 
     private TextView status_text_view;
@@ -46,6 +48,18 @@ public class IOTAccessPointActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_iotaccess_point);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        ToggleButton toggle = (ToggleButton) findViewById(R.id.btn_stream);
+        toggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    // aim for 1 fps
+                    gateway.startStreaming();
+                } else {
+                    gateway.stopStreaming();
+                }
+            }
+        });
 
         status_text_view = (TextView) findViewById(R.id.status_text);
         status_text_view.setMovementMethod(new ScrollingMovementMethod());
@@ -60,12 +74,12 @@ public class IOTAccessPointActivity extends ActionBarActivity {
         try {
             connectToGateway(HUB_SERVER_NAME, HUB_SERVER_PORT);
             // just for test
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    gateway.disconnect();
-                }
-            }, 15000);
+//            handler.postDelayed(new Runnable() {
+//                @Override
+//                public void run() {
+//                    gateway.disconnect();
+//                }
+//            }, 15000);
         } catch (Exception e) {
             e.printStackTrace();
             status_text_view.setText("Could not connect!\n");
@@ -86,10 +100,12 @@ public class IOTAccessPointActivity extends ActionBarActivity {
             gateway = new ServiceGateway(serverAddress, serverPort);
             gateway.registerCommandListener(new BTCommandListener(BLUETOOTH_DEVICE_NAME));
             gateway.registerCommandListener(new UICommandListener(statusTextUpdater));
+            gateway.registerStreamer(new CameraStreamer((FrameLayout) findViewById(R.id.camera_preview)));
         }
 
         if (gateway != null && !gateway.isConnected()) {
             gateway.connect();
+//            gateway.startStreaming();
         }
     }
 
@@ -120,10 +136,6 @@ public class IOTAccessPointActivity extends ActionBarActivity {
         }
 
         return s;
-    }
-
-    private void startCameraPreview(Camera camera) {
-
     }
 
     private void disconnectAndReleaseCamera() {
@@ -167,8 +179,6 @@ public class IOTAccessPointActivity extends ActionBarActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        gateway.registerStreamer(new CameraStreamer((FrameLayout) findViewById(R.id.camera_preview)));
-        gateway.startStreaming();
         Log.d("LIFE_FLOW", "onResume");
     }
 
