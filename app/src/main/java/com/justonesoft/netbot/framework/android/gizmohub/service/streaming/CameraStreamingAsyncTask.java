@@ -7,6 +7,8 @@ import android.util.Log;
 import com.justonesoft.netbot.CameraStreamingActivity;
 
 import java.io.IOException;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.LinkedBlockingDeque;
 
 /**
  * Created by bmunteanu on 4/19/2016.

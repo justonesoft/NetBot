@@ -29,6 +29,7 @@ public class CameraManager {
             StatusTextUpdaterManager.updateStatusText(CameraStreamingActivity.TEXT_UPDATE_ID, "Could not open camera");
             Log.d("CameraManager", "Camera open error: " + e.getMessage());
             cameraAvailable = false;
+            throw e;
         }
         return c; // returns null if camera is unavailable
     }

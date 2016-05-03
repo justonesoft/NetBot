@@ -8,6 +8,7 @@ import com.justonesoft.netbot.framework.android.gizmohub.protocol.ReadingProtoco
 import com.justonesoft.netbot.framework.android.gizmohub.service.streaming.Streamer;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
@@ -46,6 +47,8 @@ public class ServiceGateway implements MessageReadyListener, StreamingDataReadyL
     private boolean connected = false;
 
     private SocketChannel socketChannel;
+    private OutputStream outputStream;
+    private Socket socket;
 
     private final ReadingProtocol readingProtocol;
 
@@ -95,8 +98,41 @@ public class ServiceGateway implements MessageReadyListener, StreamingDataReadyL
             @Override
             public SocketChannel call() throws Exception {
                 if (connected) return null;
-                connected = true; // even it is not yet, consider it is because we don't want some other thread to try connecting
+//                connected = true; // even it is not yet, consider it is because we don't want some other thread to try connecting
                 try {
+//                    socket = new Socket();
+//                    int retries = 1;
+//                    while (retries <= MAX_RETRIES) {
+//                        try {
+//                            if (socket.isConnected()) break;
+//                            socket = new Socket();
+//                            socket.connect(new InetSocketAddress(serverAddress, serverPort), (int) THREE_SECONDS * retries);
+//
+//                        } catch (SocketTimeoutException timeout) {
+//                            timeout.printStackTrace();
+//                            retries++;
+//                        } catch (Exception e) {
+//                            e.printStackTrace();
+//                            connected = false;
+//                            throw e;
+//                        }
+//                    }
+//
+//                    if (!socket.isConnected()) {
+//                        connected = false;
+//                        Log.d("ServiceGateway", "Could Not Connected !!!");
+//                        return null;
+//                    } else {
+//                        connected = true; //already true but make it more clear
+//                        Log.d("ServiceGateway", "Connected !!!");
+//                        Log.i("SOCKET_BUFFER_SIZE", "BufferSize-before: " + socket.getSendBufferSize());
+//                        socket.setSendBufferSize(64 * 1024);
+//                        Log.i("SOCKET_BUFFER_SIZE", "BufferSize-after: " + socket.getSendBufferSize());
+//                    }
+//                    while (!disconnect) {
+//                        Thread.sleep(10000);
+//                        Log.d("SLEEP", "Awake");
+//                    }
 
                     socketChannel = SocketChannel.open();
 
@@ -107,7 +143,11 @@ public class ServiceGateway implements MessageReadyListener, StreamingDataReadyL
                         try {
                             if (socketChannel.isConnected()) break;
                             socketChannel = SocketChannel.open();
+                            Log.i("SOCKET_BUFFER_SIZE", "BufferSize-before: " + socketChannel.socket().getSendBufferSize());
+                            socketChannel.socket().setSendBufferSize(64 * 1024);
+                            Log.i("SOCKET_BUFFER_SIZE", "BufferSize-after: " + socketChannel.socket().getSendBufferSize());
                             socketChannel.socket().connect(new InetSocketAddress(serverAddress, serverPort), (int) THREE_SECONDS * retries);
+
                         } catch (SocketTimeoutException timeout) {
                             timeout.printStackTrace();
                             retries++;
@@ -151,7 +191,6 @@ public class ServiceGateway implements MessageReadyListener, StreamingDataReadyL
                         }
                     }
                     socketChannel.close();
-
                 } catch (IOException e) {
                     e.printStackTrace();
                     throw e;
@@ -160,6 +199,13 @@ public class ServiceGateway implements MessageReadyListener, StreamingDataReadyL
                     throw e;
                 }
                 finally {
+//                    disconnect = true;
+//                    if (socket != null) {
+//                        socket.close();
+//                    }
+//                    socket = null;
+//                    connected = false;
+
                     disconnect = true;
                     if (socketChannel != null) {
                         socketChannel.close();
@@ -188,11 +234,38 @@ public class ServiceGateway implements MessageReadyListener, StreamingDataReadyL
 
     @Override
     public void streamingDataReady(ByteBuffer dataBuffer) {
+        if (!connected) return;
         dataBuffer.flip();
+//        Log.i("STREAMING_DATA_LENGTH", "ByteBufferLength: " + dataBuffer.limit());
         try {
+            long start = System.currentTimeMillis();
+            long zeroSent = 0;
+
             while (dataBuffer.hasRemaining()) {
-                socketChannel.write(dataBuffer);
+                int send = socketChannel.write(dataBuffer);
+                if (send == 0) {
+                    zeroSent++;
+                }
+//                else {
+//                    Log.i("STREAMING", "Sent: " + send);
+//                }
             }
+
+            Log.i("STREAMING_DURATION", "Duration: " + (System.currentTimeMillis() - start) + ", ZeroSent: " + zeroSent);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void streamingDataReady(byte[] data) {
+        if (!connected) return;
+        try {
+            long start = System.currentTimeMillis();
+            long zeroSent = 0;
+            socket.getOutputStream().write(data);
+            socket.getOutputStream().flush();
+            Log.i("STREAMING_DURATION", "Duration: " + (System.currentTimeMillis() - start) + ", ZeroSent: " + zeroSent);
         } catch (IOException e) {
             e.printStackTrace();
         }

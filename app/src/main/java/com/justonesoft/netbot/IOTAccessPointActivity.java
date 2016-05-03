@@ -30,12 +30,10 @@ public class IOTAccessPointActivity extends ActionBarActivity {
      */
     private byte state;
 
-    private Camera camera;
-
     private boolean isBluetoothConnected = false;
 
     private final static String BLUETOOTH_DEVICE_NAME = "HC-05";
-    private final static String HUB_SERVER_NAME = "52.39.100.10";
+    private final static String HUB_SERVER_NAME = "service.gizmo-hub.com";
     private final static int HUB_SERVER_PORT = 9999;
 
     private TextView status_text_view;
@@ -139,10 +137,7 @@ public class IOTAccessPointActivity extends ActionBarActivity {
     }
 
     private void disconnectAndReleaseCamera() {
-        if (camera != null) {
-            camera.release();
-        }
-        camera = null; //not sure about this
+
     }
 
     private void disconnectFromSocket() {
@@ -171,9 +166,9 @@ public class IOTAccessPointActivity extends ActionBarActivity {
         super.onStop();
         Log.d("LIFE_FLOW", "onStop");
 
-        disconnectFromSocket();
-        disconnectFromBluetooth();
-        disconnectAndReleaseCamera();
+//        disconnectFromSocket();
+//        disconnectFromBluetooth();
+//        disconnectAndReleaseCamera();
     }
 
     @Override

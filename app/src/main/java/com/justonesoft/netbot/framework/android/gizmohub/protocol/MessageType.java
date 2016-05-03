@@ -9,7 +9,8 @@ public enum MessageType {
     BLUETOOTH((byte)1),
     SMS((byte)2),
     UI((byte)3),
-    START_STREAM((byte)4);
+    START_STREAM((byte)4),
+    NEXT_IMAGE((byte)5);
 
     private final byte commandByte;
 
@@ -32,6 +33,8 @@ public enum MessageType {
                 return UI;
             case 4:
                 return START_STREAM;
+            case 5:
+                return NEXT_IMAGE;
             default:
                 return null;
         }

@@ -7,4 +7,7 @@ import java.nio.ByteBuffer;
  */
 public interface StreamingDataReadyListener {
     public void streamingDataReady(ByteBuffer dataBuffer);
+
+    public void streamingDataReady(byte[] data);
 }
+
