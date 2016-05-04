@@ -146,6 +146,7 @@ public class ServiceGateway implements MessageReadyListener, StreamingDataReadyL
                             Log.i("SOCKET_BUFFER_SIZE", "BufferSize-before: " + socketChannel.socket().getSendBufferSize());
                             socketChannel.socket().setSendBufferSize(64 * 1024);
                             Log.i("SOCKET_BUFFER_SIZE", "BufferSize-after: " + socketChannel.socket().getSendBufferSize());
+                            socketChannel.socket().setTcpNoDelay(true);
                             socketChannel.socket().connect(new InetSocketAddress(serverAddress, serverPort), (int) THREE_SECONDS * retries);
 
                         } catch (SocketTimeoutException timeout) {

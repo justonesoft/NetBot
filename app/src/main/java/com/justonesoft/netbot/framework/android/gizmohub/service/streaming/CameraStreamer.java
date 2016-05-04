@@ -57,7 +57,7 @@ public class CameraStreamer implements Streamer<byte[]> {
 //        camera.setPreviewCallback(new Camera.PreviewCallback() {
 //            @Override
 //            public void onPreviewFrame(byte[] data, Camera camera) {
-////                Log.i("PreviewCallback", "Size: " + data.length);
+//                Log.i("PreviewCallback", "Size: " + data.length);
 //                try {
 //                    stream(data);
 //                } catch (IOException e) {

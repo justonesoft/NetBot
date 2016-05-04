@@ -58,10 +58,12 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             params.setColorEffect(android.hardware.Camera.Parameters.EFFECT_MONO);
 //            params.setPictureSize(Math.min(minSize.width, minSize.height), Math.max(minSize.width, minSize.height));
             params.setPictureSize(minSize.width, minSize.height);
+            params.setJpegQuality(0);
+            params.setJpegThumbnailSize(0, 0);
+
             mCamera.setParameters(params);
             mCamera.setPreviewDisplay(holder);
             mCamera.startPreview();
-
         } catch (IOException e) {
             Log.d(TAG, "Error setting camera preview: " + e.getMessage());
         }
@@ -71,6 +73,11 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         List<Integer> supportedImageFormats = params.getSupportedPictureFormats();
         for (Integer pictureFormat : supportedImageFormats) {
             Log.i(TAG, "ImageFormat: " + pictureFormat);
+        }
+
+        List<Integer> supportedPreviewFormats = params.getSupportedPreviewFormats();
+        for (Integer pictureFormat : supportedImageFormats) {
+            Log.i(TAG, "PreviewFormat: " + pictureFormat);
         }
     }
 
@@ -145,6 +152,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
             Log.i(TAG, "Min Size is: w-" + minSize.width + " : h-" + minSize.height);
         }
+        params.setJpegQuality(0);
+        params.setJpegThumbnailSize(0, 0);
         mCamera.setParameters(params);
 
         // connect preview with new settings
