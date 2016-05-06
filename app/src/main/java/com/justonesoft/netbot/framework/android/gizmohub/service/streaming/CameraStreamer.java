@@ -1,6 +1,10 @@
 package com.justonesoft.netbot.framework.android.gizmohub.service.streaming;
 
 import android.content.Context;
+import android.graphics.BitmapFactory;
+import android.graphics.ImageFormat;
+import android.graphics.Rect;
+import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.os.AsyncTask;
 import android.util.Log;
@@ -12,6 +16,7 @@ import com.justonesoft.netbot.camera.CameraManager;
 import com.justonesoft.netbot.camera.CameraPreview;
 import com.justonesoft.netbot.framework.android.gizmohub.service.StreamingDataReadyListener;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -34,6 +39,8 @@ public class CameraStreamer implements Streamer<byte[]> {
     private ByteBuffer imageBuffer;
     private byte frame = 0;
 
+    ByteArrayOutputStream baos = null;
+
     private BlockingDeque<FrameForImage> streamingDeque = new LinkedBlockingDeque<>(1);
 
     public CameraStreamer(ViewGroup cameraSurface) {
@@ -54,17 +61,9 @@ public class CameraStreamer implements Streamer<byte[]> {
         cameraSurface.addView(cameraPreview = new CameraPreview(cameraSurface.getContext(), camera));
         imageSizeBuffer = ByteBuffer.allocate(4); //integer  = 4 bytes
         imageBuffer = ByteBuffer.allocate(IMAGE_BUFFER_SIZE);
-//        camera.setPreviewCallback(new Camera.PreviewCallback() {
-//            @Override
-//            public void onPreviewFrame(byte[] data, Camera camera) {
-//                Log.i("PreviewCallback", "Size: " + data.length);
-//                try {
-//                    stream(data);
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        });
+
+        baos = new ByteArrayOutputStream();
+
         return false;
     }
 
@@ -74,7 +73,33 @@ public class CameraStreamer implements Streamer<byte[]> {
 
         cameraStreamingTask = new CameraStreamingAsyncTask(this);
 
-        cameraStreamingTask.execute((Void) null);
+        camera.setPreviewCallback(new Camera.PreviewCallback() {
+            @Override
+            public void onPreviewFrame(byte[] data, Camera camera) {
+                try {
+                    YuvImage image = new YuvImage(data, ImageFormat.NV21, 176, 144, new int[] {176, 176});
+
+                    baos.reset();
+                    image.compressToJpeg(new Rect(0,0,176,144), 30, baos);
+                    data = baos.toByteArray();
+                    baos.flush();
+
+                    stream(data);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+//                Log.i("PreviewCallback", "Size: " + data.length);
+//                BitmapFactory.Options options = new BitmapFactory.Options();
+//                options.inJustDecodeBounds = true;
+//                BitmapFactory.decodeByteArray(data, 0, data.length, options);
+//                int imageHeight = options.outHeight;
+//                int imageWidth = options.outWidth;
+//                String imageType = options.outMimeType;
+//                Log.d("PreviewCallback", "w: "+imageWidth+" / h: "+imageHeight+" / t: " + imageType);
+            }
+        });
+
+        //        cameraStreamingTask.execute((Void) null);
 
         Thread runner = new Thread(new Runnable() {
             @Override
@@ -141,6 +166,15 @@ public class CameraStreamer implements Streamer<byte[]> {
 //            cameraSurface.removeView(cameraPreview);
 //        }
         cameraStreamingTask = null;
+
+        if (baos != null) {
+            try {
+                baos.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            baos = null;
+        }
         return true;
     }
 
