@@ -28,6 +28,9 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         super(context);
         mCamera = camera;
 
+        setCameraParams();
+
+
         // Install a SurfaceHolder.Callback so we get notified when the
         // underlying surface is created and destroyed.
         mHolder = getHolder();
@@ -94,7 +97,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         Collections.sort(acceptedSizes, new Comparator<Camera.Size>() {
             @Override
             public int compare(Camera.Size lhs, Camera.Size rhs) {
-                return (lhs.width*lhs.height) - (rhs.width*rhs.height);
+                return (lhs.width * lhs.height) - (rhs.width * rhs.height);
             }
         });
         if (useMinim) {
@@ -171,5 +174,13 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         params.setPreviewSize(minPreviewSize.width, minPreviewSize.height);
 
         mCamera.setParameters(params);
+    }
+
+    public Camera.Size getMinPictureSize() {
+        return minPictureSize;
+    }
+
+    public Camera.Size getMinPreviewSize() {
+        return minPreviewSize;
     }
 }

@@ -7,6 +7,7 @@ import android.graphics.Rect;
 import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.os.AsyncTask;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.Surface;
 import android.view.ViewGroup;
@@ -30,6 +31,12 @@ import java.util.concurrent.TimeUnit;
  */
 public class CameraStreamer implements Streamer<byte[]> {
     public static final int IMAGE_BUFFER_SIZE = 120000;
+    private static final int DEFAULT_WIDTH = 320;
+    private static final int DEFAULT_HEIGHT = 240;
+    private static final int DEFAULT_FPS = 10;
+    private static final int DEFAULT_JPG_QUALITY = 20;
+    private static final int ONE_SEC_IN_MILLIS = 1000;
+
     private ViewGroup cameraSurface;
     private Camera camera;
     private CameraPreview cameraPreview;
@@ -42,6 +49,11 @@ public class CameraStreamer implements Streamer<byte[]> {
     ByteArrayOutputStream baos = null;
 
     private BlockingDeque<FrameForImage> streamingDeque = new LinkedBlockingDeque<>(1);
+    private int imageWidth = DEFAULT_WIDTH;
+    private int imageHeight = DEFAULT_HEIGHT;
+    private int fps = DEFAULT_FPS;
+    private int jpgQuality = DEFAULT_JPG_QUALITY;
+    private long lastSentFrame = 0;
 
     public CameraStreamer(ViewGroup cameraSurface) {
         this.cameraSurface = cameraSurface;
@@ -57,14 +69,24 @@ public class CameraStreamer implements Streamer<byte[]> {
         // Create an instance of Camera
         camera = CameraManager.getCameraInstance();
 
-//        setCameraDisplayOrientation();
         cameraSurface.addView(cameraPreview = new CameraPreview(cameraSurface.getContext(), camera));
         imageSizeBuffer = ByteBuffer.allocate(4); //integer  = 4 bytes
         imageBuffer = ByteBuffer.allocate(IMAGE_BUFFER_SIZE);
 
         baos = new ByteArrayOutputStream();
 
-        return false;
+        setImageWidthAndHeight(cameraPreview);
+        fps = DEFAULT_FPS;
+        jpgQuality = DEFAULT_JPG_QUALITY;
+        lastSentFrame = 0;
+        return true;
+    }
+
+    private void setImageWidthAndHeight(CameraPreview cameraPreview) {
+        if (cameraPreview != null && cameraPreview.getMinPreviewSize() != null) {
+            imageWidth = cameraPreview.getMinPreviewSize().width;
+            imageHeight = cameraPreview.getMinPreviewSize().height;
+        }
     }
 
     @Override
@@ -73,29 +95,32 @@ public class CameraStreamer implements Streamer<byte[]> {
 
         cameraStreamingTask = new CameraStreamingAsyncTask(this);
 
+        final int twoFrameMillis = ONE_SEC_IN_MILLIS / fps;
+
         camera.setPreviewCallback(new Camera.PreviewCallback() {
             @Override
             public void onPreviewFrame(byte[] data, Camera camera) {
                 try {
-                    YuvImage image = new YuvImage(data, ImageFormat.NV21, 176, 144, new int[] {176, 176});
+                    long now = SystemClock.uptimeMillis();
+                    if (lastSentFrame == 0) {
+                        lastSentFrame = now;
+                    }
+                    Log.d("FPS", "now: "+now+" / LSF: "+lastSentFrame+" / lsf+delta: "+(lastSentFrame + twoFrameMillis));
+                    if (lastSentFrame + twoFrameMillis > now) return; // to early for desired FPS
+
+                    YuvImage image = new YuvImage(data, ImageFormat.NV21, imageWidth, imageHeight, new int[] {imageWidth, imageWidth});
 
                     baos.reset();
-                    image.compressToJpeg(new Rect(0,0,176,144), 30, baos);
+                    image.compressToJpeg(new Rect(0, 0, imageWidth, imageHeight), jpgQuality, baos);
                     data = baos.toByteArray();
                     baos.flush();
+
+                    lastSentFrame = now;
 
                     stream(data);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-//                Log.i("PreviewCallback", "Size: " + data.length);
-//                BitmapFactory.Options options = new BitmapFactory.Options();
-//                options.inJustDecodeBounds = true;
-//                BitmapFactory.decodeByteArray(data, 0, data.length, options);
-//                int imageHeight = options.outHeight;
-//                int imageWidth = options.outWidth;
-//                String imageType = options.outMimeType;
-//                Log.d("PreviewCallback", "w: "+imageWidth+" / h: "+imageHeight+" / t: " + imageType);
             }
         });
 
@@ -117,14 +142,6 @@ public class CameraStreamer implements Streamer<byte[]> {
 
                     Log.i("OFFER_FRAME", "Take Frame: " + ffi.frame);
 
-//                    imageBuffer.rewind();
-//                    imageBuffer.putInt(ffi.imageData.length);
-//                    imageBuffer.put(ffi.frame);
-//                    imageBuffer.put(ffi.imageData);
-//                    byte[] data = new byte[imageBuffer.position()];
-//                    imageBuffer.rewind();
-//                    imageBuffer.get(data);
-//                    dataReadyListener.streamingDataReady(data);
                     imageSizeBuffer.rewind();
                     imageSizeBuffer.putInt(ffi.imageData.length);
 
@@ -207,7 +224,7 @@ public class CameraStreamer implements Streamer<byte[]> {
         this.dataReadyListener = dataReadyListener;
     }
 
-    public void setCameraDisplayOrientation() {
+    private void setCameraDisplayOrientation() {
         android.hardware.Camera.CameraInfo info =
                 new android.hardware.Camera.CameraInfo();
         android.hardware.Camera.getCameraInfo(0, info);
