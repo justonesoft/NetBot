@@ -17,7 +17,7 @@ public class SocketFactory {
 
     public static  Socket getConnectedSocket() {
         try {
-            return new Socket("192.168.22.126", 9999);
+            return new Socket("52.36.146.169", 9999);
         } catch (IOException e) {
             e.printStackTrace();
             return null;

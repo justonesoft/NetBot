@@ -10,7 +10,7 @@
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:id="@+id/camera_preview_frame" />
+        android:id="@+id/camera_preview" />
 
     <LinearLayout
         android:orientation="horizontal"
@@ -32,6 +32,14 @@
             android:text="@string/button_text_refresh"
             android:onClick="reconnect"
             android:nestedScrollingEnabled="false" />
+
+        <ToggleButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Stream"
+            android:id="@+id/btn_stream"
+            android:textOn="No Stream"
+            android:textOff="Stream" />
     </LinearLayout>
 
     <TextView
