@@ -1,6 +1,6 @@
 package com.justonesoft.netbot;
 
-import android.hardware.Camera;
+import android.bluetooth.BluetoothDevice;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
@@ -14,6 +14,7 @@ import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import com.justonesoft.netbot.bt.BTController;
+import com.justonesoft.netbot.camera.CameraPreview;
 import com.justonesoft.netbot.framework.android.gizmohub.service.BTCommandListener;
 import com.justonesoft.netbot.framework.android.gizmohub.service.ServiceGateway;
 import com.justonesoft.netbot.framework.android.gizmohub.service.UICommandListener;
@@ -71,13 +72,6 @@ public class IOTAccessPointActivity extends ActionBarActivity {
         final Handler handler = new Handler();
         try {
             connectToGateway(HUB_SERVER_NAME, HUB_SERVER_PORT);
-            // just for test
-//            handler.postDelayed(new Runnable() {
-//                @Override
-//                public void run() {
-//                    gateway.disconnect();
-//                }
-//            }, 15000);
         } catch (Exception e) {
             e.printStackTrace();
             status_text_view.setText("Could not connect!\n");
@@ -95,15 +89,27 @@ public class IOTAccessPointActivity extends ActionBarActivity {
         StatusUpdateHandler statusTextUpdater = new StatusUpdateHandler(status_text_view);
 
         if (gateway == null) {
+            CameraStreamer cs = new CameraStreamer((FrameLayout) findViewById(R.id.camera_preview));
+
+            prepareAndConnectBluetooth(BLUETOOTH_DEVICE_NAME);
+
+
             gateway = new ServiceGateway(serverAddress, serverPort);
-            gateway.registerCommandListener(new BTCommandListener(BLUETOOTH_DEVICE_NAME));
+            gateway.registerCommandListener(BTController.getInstance());
             gateway.registerCommandListener(new UICommandListener(statusTextUpdater));
-            gateway.registerStreamer(new CameraStreamer((FrameLayout) findViewById(R.id.camera_preview)));
+            gateway.registerCommandListener(cs);
+            gateway.registerStreamer(cs);
         }
 
         if (gateway != null && !gateway.isConnected()) {
             gateway.connect();
-//            gateway.startStreaming();
+        }
+    }
+
+    private void prepareAndConnectBluetooth(String bluetoothDeviceName) {
+        BluetoothDevice btDevice = BTController.getInstance().getPairedBTDeviceByName(bluetoothDeviceName);
+        if (btDevice != null) {
+            BTController.getInstance().connectWithBTDevice(btDevice);
         }
     }
 

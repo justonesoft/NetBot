@@ -1,7 +1,5 @@
 package com.justonesoft.netbot.util;
 
-import android.util.Log;
-
 /**
  * Various definitions for the commands available to be sent to the bot to control it.
  * Created by bmunteanu on 2/11/2016.
@@ -30,15 +28,20 @@ public enum Commands {
     /**
      * Command to stop whatever it is doing.
      */
-    STOP((byte) 0);
+    STOP((byte) 0),
 
-    private final byte whatToSend;
+    /**
+     * Command to start streaming images
+     */
+    START_IMAGE_STREAMING((byte) 5);
 
-    private Commands(byte whatToSend) {
-        this.whatToSend = whatToSend;
+    private final byte info;
+
+    private Commands(byte info) {
+        this.info = info;
     }
 
-    public byte getWhatToSend() {
-        return this.whatToSend;
+    public byte getInfo() {
+        return this.info;
     }
 }
