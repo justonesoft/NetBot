@@ -79,6 +79,10 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         }
     }
 
+    /**
+     * Utility method to list all supported picture formats
+     * @param params
+     */
     private void determinePictureFormat(Camera.Parameters params) {
         List<Integer> supportedImageFormats = params.getSupportedPictureFormats();
         for (Integer pictureFormat : supportedImageFormats) {
@@ -91,6 +95,14 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         }
     }
 
+    /**
+     * Utility method to determine, based on the argumets, what is the optimum image size.
+     *
+     * @param acceptedSizes List of all accepted image sizes as returned by Camera.Parameters#getSupportedPictureSizes()
+     * @param useMinim true if you want to receuve the minimum supported image size
+     * @param index the index in the ascending sorted array of acceptedSizes. Sorting happens inside this method.
+     * @return
+     */
     private Camera.Size determineOptimumImageSize(List<Camera.Size> acceptedSizes, boolean useMinim, int index) {
         // select the minimum image size for portrait: width < height and width x height is minim
         long surface = Long.MAX_VALUE;
@@ -128,6 +140,9 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         params.setRotation(rotation);
     }
 
+    /**
+     * Prepare camera with all desired parameters.
+     */
     private void setCameraParams() {
         Camera.Parameters params = mCamera.getParameters();
         determinePictureFormat(params);
@@ -137,6 +152,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             List<Camera.Size> acceptedSizes = params.getSupportedPictureSizes();
             minPictureSize = determineOptimumImageSize(acceptedSizes, true, 0);
         }
+
         Log.i(TAG, "Min Picture Size is: w-" + minPictureSize.width + " : h-" + minPictureSize.height);
         params.setPictureSize(minPictureSize.width, minPictureSize.height);
 
