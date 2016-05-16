@@ -2,6 +2,7 @@ package com.justonesoft.netbot;
 
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
+import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -11,14 +12,19 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import com.justonesoft.netbot.bt.BTController;
+import com.justonesoft.netbot.camera.CameraManager;
+import com.justonesoft.netbot.camera.CameraPreview;
 import com.justonesoft.netbot.util.Commands;
 import com.justonesoft.netbot.util.StatusTextUpdater;
 import com.justonesoft.netbot.util.StatusTextUpdaterManager;
 import com.justonesoft.netbot.util.StatusUpdateType;
 import com.justonesoft.netbot.util.TextViewUtil;
+
+import java.util.Set;
 
 /**
  * This class is where user can send commands to the controlled bot over Bluetooth. <br />
@@ -161,20 +167,20 @@ public class NavigateActivity extends ActionBarActivity implements View.OnTouchL
             // identify the event
             case MotionEvent.ACTION_DOWN:
                 // connect sending commands
-                byte commandToSend = Commands.STOP.getInfo();
+                byte commandToSend = Commands.STOP.getWhatToSend();
                 // identify the component
                 switch (v.getId()) {
                     case R.id.up_button:
-                        commandToSend = Commands.MOVE_FORWARD.getInfo();
+                        commandToSend = Commands.MOVE_FORWARD.getWhatToSend();
                         break;
                     case R.id.down_button:
-                        commandToSend = Commands.MOVE_BACKWARDS.getInfo();
+                        commandToSend = Commands.MOVE_BACKWARDS.getWhatToSend();
                         break;
                     case R.id.left_button:
-                        commandToSend = Commands.TURN_LEFT.getInfo();
+                        commandToSend = Commands.TURN_LEFT.getWhatToSend();
                         break;
                     case R.id.right_button:
-                        commandToSend = Commands.TURN_RIGHT.getInfo();
+                        commandToSend = Commands.TURN_RIGHT.getWhatToSend();
                         break;
                 }
                 BTController.getInstance().sendCommand(commandToSend);
@@ -183,7 +189,7 @@ public class NavigateActivity extends ActionBarActivity implements View.OnTouchL
                 break;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_OUTSIDE:
-                commandToSend = Commands.STOP.getInfo();
+                commandToSend = Commands.STOP.getWhatToSend();
                 BTController.getInstance().sendCommand(commandToSend);
                 updateStatusText(COMMAND_SENT_ID, Integer.valueOf(commandToSend));
                 break;

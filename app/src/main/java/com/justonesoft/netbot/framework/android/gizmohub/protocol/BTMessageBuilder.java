@@ -3,18 +3,12 @@ package com.justonesoft.netbot.framework.android.gizmohub.protocol;
 import java.util.Arrays;
 
 /**
- * Bluetooth specialized MessageBuilder.
- * <br /> <br />
- *
- * Reads data from byte[]. <br />
- *
- * Protocol: 1 byte - the bluetooth command
  * Created by bmunteanu on 4/9/2016.
  */
-public class OneByteMessageBuilder extends MessageBuilder {
+public class BTMessageBuilder extends MessageBuilder {
     private Message<Byte> message;
 
-    OneByteMessageBuilder() {
+    BTMessageBuilder() {
         message = new Message<>(MessageType.BLUETOOTH, 1);
         stage = ReadingStage.READ_PAYLOAD;
     }

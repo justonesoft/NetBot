@@ -1,7 +1,6 @@
 package com.justonesoft.netbot.framework.android.gizmohub.protocol;
 
 /**
- * <em> NOT CURRENTLY IMPLEMENTED </em>
  * Created by bmunteanu on 4/9/2016.
  */
 public class SMSMessageBuilder extends MessageBuilder {

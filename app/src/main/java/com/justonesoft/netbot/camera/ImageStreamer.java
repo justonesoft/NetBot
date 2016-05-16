@@ -7,14 +7,20 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 /**
- * <em></em>Currently not supported by the server. </em><br>
- * Server protocol is: 4bytes - image size; 1 byte - frame number; byte[size] - image data bytes
  * Created by bmunteanu on 3/10/2016.
  */
 public class ImageStreamer implements Streamer<byte[]> {
     private final DataOutputStream outputStream;
 
     private boolean ready = false;
+
+    // needs to have a OutputStream to write the image data
+    //    - this OutputStream should come from a Socket.getOutputStream
+    // will wait or will be notified when a image data, byte[], is ready for streaming
+    //    - if waiting use some BlockingQueue
+    //    - if notified, register this as a Listener
+    // when new image data is received will try to push it to the outputstream
+    //    - will notify some entity when the image has been fully sent
 
     public ImageStreamer(OutputStream outputStream) {
         this.outputStream = new DataOutputStream(outputStream);

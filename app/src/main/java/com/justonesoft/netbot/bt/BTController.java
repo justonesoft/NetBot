@@ -7,10 +7,6 @@ import android.widget.Toast;
 
 import com.justonesoft.netbot.NavigateActivity;
 import com.justonesoft.netbot.communication.BluetoothCommunicator;
-import com.justonesoft.netbot.framework.android.gizmohub.protocol.Message;
-import com.justonesoft.netbot.framework.android.gizmohub.protocol.MessageType;
-import com.justonesoft.netbot.framework.android.gizmohub.service.CommandListener;
-import com.justonesoft.netbot.util.Commands;
 import com.justonesoft.netbot.util.StatusTextUpdaterManager;
 import com.justonesoft.netbot.util.StatusUpdateType;
 import java.io.IOException;
@@ -20,7 +16,7 @@ import java.util.UUID;
 /**
  * Created by bmunteanu on 4/22/2015.
  */
-public class BTController implements CommandListener<Byte> {
+public class BTController {
 
     public static final int BT_STATUS = 1000;
 
@@ -155,26 +151,6 @@ public class BTController implements CommandListener<Byte> {
 
     private void setBtSocket(final BluetoothSocket btSocket) {
         this.btSocket = btSocket;
-    }
-
-    @Override
-    public boolean isInterestedIn(MessageType messageType) {
-        return MessageType.BLUETOOTH.equals(messageType);
-    }
-
-    @Override
-    public void dealWithMessage(Message<Byte> message) {
-        if (message ==  null) return;
-        byte dataByte = message.getPayload();
-        if (    dataByte != Commands.MOVE_FORWARD.getInfo() &&
-                dataByte != Commands.MOVE_BACKWARDS.getInfo() &&
-                dataByte != Commands.TURN_RIGHT.getInfo() &&
-                dataByte != Commands.TURN_LEFT.getInfo() &&
-                dataByte != Commands.STOP.getInfo() ) {
-            return;
-        } else {
-            BTController.getInstance().sendCommand(message.getPayload());
-        }
     }
 
     /**

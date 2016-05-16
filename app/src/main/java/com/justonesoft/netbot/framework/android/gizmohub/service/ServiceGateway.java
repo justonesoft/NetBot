@@ -83,7 +83,7 @@ public class ServiceGateway implements MessageReadyListener, StreamingDataReadyL
 
     public void stopStreaming() {
         for (Streamer streamer : registeredStreamers) {
-            streamer.stopStreaming();
+            streamer.terminate();
         }
     }
 
@@ -100,6 +100,40 @@ public class ServiceGateway implements MessageReadyListener, StreamingDataReadyL
                 if (connected) return null;
 //                connected = true; // even it is not yet, consider it is because we don't want some other thread to try connecting
                 try {
+//                    socket = new Socket();
+//                    int retries = 1;
+//                    while (retries <= MAX_RETRIES) {
+//                        try {
+//                            if (socket.isConnected()) break;
+//                            socket = new Socket();
+//                            socket.connect(new InetSocketAddress(serverAddress, serverPort), (int) THREE_SECONDS * retries);
+//
+//                        } catch (SocketTimeoutException timeout) {
+//                            timeout.printStackTrace();
+//                            retries++;
+//                        } catch (Exception e) {
+//                            e.printStackTrace();
+//                            connected = false;
+//                            throw e;
+//                        }
+//                    }
+//
+//                    if (!socket.isConnected()) {
+//                        connected = false;
+//                        Log.d("ServiceGateway", "Could Not Connected !!!");
+//                        return null;
+//                    } else {
+//                        connected = true; //already true but make it more clear
+//                        Log.d("ServiceGateway", "Connected !!!");
+//                        Log.i("SOCKET_BUFFER_SIZE", "BufferSize-before: " + socket.getSendBufferSize());
+//                        socket.setSendBufferSize(64 * 1024);
+//                        Log.i("SOCKET_BUFFER_SIZE", "BufferSize-after: " + socket.getSendBufferSize());
+//                    }
+//                    while (!disconnect) {
+//                        Thread.sleep(10000);
+//                        Log.d("SLEEP", "Awake");
+//                    }
+
                     socketChannel = SocketChannel.open();
 
                     // try to connect
@@ -187,9 +221,7 @@ public class ServiceGateway implements MessageReadyListener, StreamingDataReadyL
 
     public void disconnect() {
         disconnect = true;
-        for (Streamer streamer : registeredStreamers) {
-            streamer.terminate();
-        }
+        stopStreaming();
     }
 
     @Override

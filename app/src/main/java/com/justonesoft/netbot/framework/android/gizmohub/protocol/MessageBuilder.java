@@ -16,8 +16,7 @@ public abstract class MessageBuilder {
         MessageBuilder builder;
         switch (type) {
             case BLUETOOTH:
-            case EXECUTE_COMMAND:
-                builder = new OneByteMessageBuilder();
+                builder = new BTMessageBuilder();
                 break;
             case SMS:
                 builder = new SMSMessageBuilder();

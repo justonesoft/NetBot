@@ -7,28 +7,13 @@ import com.justonesoft.netbot.framework.android.gizmohub.service.MessageReadyLis
 import java.util.Arrays;
 
 /**
- * This calss is responsible with accepting and interpreting data received from server. <br />
- * Communication protocol is: <br />
- * 1st byte - message type; used to create the MessageBuilder
- * rest of data - are processed by the MessageBuilder
  * Created by bmunteanu on 4/9/2016.
  */
 public class ReadingProtocol {
 
 //    private final int PROCESSING_QUEUE_SIZE = 10;
-    /**
-     * THe current state of reading the data from server
-     */
     private ReadingStage stage = ReadingStage.IDLE;
-
-    /**
-     * Current MesageBuilder responsible with parsing the data from server according to it implementation
-     */
     private MessageBuilder messageBuilder;
-
-    /**
-     * The listener to be notified when the message is ready
-     */
     private MessageReadyListener messageReadyListener;
 
     /**
