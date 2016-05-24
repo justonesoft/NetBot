@@ -62,19 +62,15 @@ public class ReadingProtocol {
             stage = messageBuilder.currentStage();
         }
         Log.d("ReadingProtocol", "stage: " + stage);
-        if (nextChunk.length > 0) {
-            for (byte bt : nextChunk) {
-                Log.d("ReadingProtocol", "byte : " + bt);
-            }
-        } else {
-            Log.d("ReadingProtocol", "nextChunk empty");
-        }
         switch (stage) {
             case IDLE:
                 //this is the start of a new message
                 if (nextChunk == null || nextChunk.length == 0) return;
                 // first byte will represent the command and it is used to create and appropriate MessageBuilder
-                messageBuilder = MessageBuilder.create(MessageType.fromCommandByte(nextChunk[0]));
+                MessageType mt = MessageType.fromCommandByte(nextChunk[0]);
+                Log.d("ReadingProtocol", "message-type: " + mt);
+
+                messageBuilder = MessageBuilder.create(mt);
                 if (nextChunk.length == 1) {
                     stage = messageBuilder.currentStage();
                     return; // no more bytes to process

@@ -12,10 +12,10 @@ import java.util.Arrays;
  * Created by bmunteanu on 4/9/2016.
  */
 public class OneByteMessageBuilder extends MessageBuilder {
-    private Message<Byte> message;
+    private final Message<Byte> message;
 
-    OneByteMessageBuilder() {
-        message = new Message<>(MessageType.BLUETOOTH, 1);
+    OneByteMessageBuilder(MessageType mt) {
+        message = new Message<>(mt, 1);
         stage = ReadingStage.READ_PAYLOAD;
     }
 

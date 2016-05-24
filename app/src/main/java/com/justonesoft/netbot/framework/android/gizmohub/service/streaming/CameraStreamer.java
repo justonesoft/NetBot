@@ -116,7 +116,7 @@ public class CameraStreamer implements Streamer<byte[]>, CommandListener<Byte> {
                     if (lastSentFrame == 0) {
                         lastSentFrame = now;
                     }
-                    Log.d("FPS", "now: " + now + " / LSF: " + lastSentFrame + " / lsf+delta: " + (lastSentFrame + twoFrameMillis));
+//                    Log.d("FPS", "now: " + now + " / LSF: " + lastSentFrame + " / lsf+delta: " + (lastSentFrame + twoFrameMillis));
                     if (lastSentFrame + twoFrameMillis > now) return; // to early for desired FPS
 
                     YuvImage image = new YuvImage(data, ImageFormat.NV21, imageWidth, imageHeight, new int[]{imageWidth, imageWidth});
@@ -186,10 +186,14 @@ public class CameraStreamer implements Streamer<byte[]>, CommandListener<Byte> {
 //            cameraStreamingTask.cancel(false);
 //        }
 
-        if (camera != null) {
+        if (streaming && camera != null) {
             camera.stopPreview();
             camera.setPreviewCallback(null);
-            camera.unlock();
+            try {
+                camera.unlock();
+            } catch(Exception e) {
+                Log.e("UNLOCK_CAMERA", "Could not unlock");
+            }
         }
         streaming = false;
         streamingThread = null;
@@ -275,7 +279,7 @@ public class CameraStreamer implements Streamer<byte[]>, CommandListener<Byte> {
 
     @Override
     public boolean isInterestedIn(MessageType messageType) {
-        return MessageType.EXECUTE_COMMAND.equals(MessageType.EXECUTE_COMMAND);
+        return MessageType.EXECUTE_COMMAND.equals(messageType);
     }
 
     @Override

@@ -211,16 +211,10 @@ public class ServiceGateway implements MessageReadyListener, StreamingDataReadyL
             long zeroSent = 0;
 
             while (dataBuffer.hasRemaining()) {
-                int send = socketChannel.write(dataBuffer);
-                if (send == 0) {
-                    zeroSent++;
-                }
-//                else {
-//                    Log.i("STREAMING", "Sent: " + send);
-//                }
+                socketChannel.write(dataBuffer);
             }
 
-            Log.i("STREAMING_DURATION", "Duration: " + (System.currentTimeMillis() - start) + ", ZeroSent: " + zeroSent);
+//            Log.i("STREAMING_DURATION", "Duration: " + (System.currentTimeMillis() - start) + ", ZeroSent: " + zeroSent);
         } catch (IOException e) {
             e.printStackTrace();
         }
